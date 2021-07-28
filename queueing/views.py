@@ -185,14 +185,12 @@ class SMS(CsrfExemptMixin, APIView):
         print(message_body)
         print(from_number)
         if message_body.startswith('register'):
-            cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
             sp_oauth = spotipy.oauth2.SpotifyOAuth(
                 config('SPOTIPY_CLIENT_ID'),
                 config('SPOTIPY_CLIENT_SECRET'),
                 config('SPOTIPY_REDIRECT_URI'),
                 scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-                cache_handler=cache
-            )
+                )
             if not LOCAL:
                 resp = MessagingResponse()
                 resp.message(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
@@ -220,7 +218,7 @@ class SMS(CsrfExemptMixin, APIView):
 
             if not LOCAL:
                 resp = MessagingResponse()
-                resp.message("You are now following {user.name}. Add a track to their queue by texting 'queue (song title')")
+                resp.message(f"You are now following {user.name}. Add a track to their queue by texting queue (song title)")
                 return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
 
@@ -240,6 +238,8 @@ class SMS(CsrfExemptMixin, APIView):
                     if not LOCAL:
                         resp = MessagingResponse()
                         resp.message(f"It appears the person you're following hasn't authenticated their account yet. Tell them to 'register'")
+                        return HttpResponse(str(resp))
+                print(listener.token)
                 sp = spotipy.Spotify(listener.token)
             track_by_artist = message_body.partition(' ')[-1]
             if 'by' in track_by_artist:

@@ -5,16 +5,18 @@ class Command(BaseCommand):
     help = 'Create su'
 
     def handle(self, *args, **options):
-        if not User.objects.filter(is_superuser=True).first():
+        #delete all super users
+        User.objects.filter(is_superuser=True).delete()
+        if not User.objects.filter(username='thatcher', is_superuser=True).first():
             print('creating user object')
             
             user = User.objects.create(
-                username = 'admin',
+                username = 'thatcher',
                 email = 'admin@spotifly.com',
                 is_superuser = True,
             )
-            user.set_password('pass')
-            print(user.username, user.email, 'pass')
+            user.set_password('pizza891')
+            print(user.username, user.email, 'pizza891')
             user.save()
         else:
             print('user already exists')

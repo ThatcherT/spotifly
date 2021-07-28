@@ -14,14 +14,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from twilio.rest import Client
 from decouple import config
 from rest_framework.decorators import api_view
-
-
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-
-    def enforce_csrf(self, request):
-        return  # To not perform the csrf check previously happening
+from braces.views import CsrfExemptMixin
 
 
 class ListenerList(APIView):
@@ -121,7 +114,7 @@ def sms_failed(request):
     return HttpResponse(str(resp))
 
 
-class SMS(APIView):
+class SMS(CsrfExemptMixin, APIView):
     """
     All Texts are Routed Here. Then, we'll send a message to the other relevant api functions.
 
@@ -135,9 +128,8 @@ class SMS(APIView):
 
     """
     
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = []
     def post(self, request, format=None):
-        authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
         # Get the account_sid from the config file
         LOCAL=config('LOCAL', default=False)
 

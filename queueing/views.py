@@ -80,7 +80,10 @@ def redirect(request):
         if request.POST.get('name'):
             token = request.POST['token']
             name = request.POST['name']
-            listener, created = Listener.objects.update_or_create(name=name, defaults={'token': token})
+            listener, created = Listener.objects.get(name=name)
+            #todo add check for token
+            listener.token = token
+            listener.save()
             print('listener', name, 'has token', token)
             return render(request, 'success.html', {"name": name})
     cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)

@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from queueing.models import Listener, Follower
 from queueing.serializers import ListenerSerializer
-
+from django.utils.decorators import method_decorator
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -102,6 +102,7 @@ def spotify_oauth(request, listener_id):
         return "<a href='" + sp_oauth.get_authorize_url() + "'>Login to Spotify</a>"
 
 
+@csrf_exempt
 def sms_failed(request):
     """
     Send failure message if twilio webhook triggers it
@@ -111,6 +112,7 @@ def sms_failed(request):
     return Response(resp)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class SMS(APIView):
     """
     All Texts are Routed Here. Then, we'll send a message to the other relevant api functions.
@@ -140,7 +142,8 @@ class SMS(APIView):
         message_body = request.data.get('Body').lower()
         # Get the sender's phone number from the request
         from_number = str(request.data.get('From'))
-        
+        print(message_body)
+        print(from_number)
         if message_body.startswith('register'):
             # Send a text message to the user telling them to visit the link to use spotify oath
             # create listener

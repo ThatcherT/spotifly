@@ -129,21 +129,11 @@ class SMS(APIView):
     def post(self, request, format=None):
         # Get the account_sid from the config file
         LOCAL=config('LOCAL', default=False)
-        account_sid = config('ACCOUNT_SID')
-        
-        # Get the auth_token from the config file
-        auth_token = config('AUTH_TOKEN')
-        
-        # Create a Twilio client to send text messages
-        client = Client(account_sid, auth_token)
+
         ACCOUNT_SID = config('ACCOUNT_SID')
         AUTH_TOKEN  = config('AUTH_TOKEN')
 
         client = Client(ACCOUNT_SID, AUTH_TOKEN)
-
-
-        SPOTIPY_CLIENT_SECRET = config('SPOTIPY_CLIENT_SECRET')
-        SPOTIPY_CLIENT_ID = config('SPOTIPY_CLIENT_ID')
 
         
         # Get the text message from the request

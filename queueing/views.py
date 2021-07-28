@@ -250,7 +250,8 @@ class SMS(CsrfExemptMixin, APIView):
                 artist = track_by_artist[1]
                 q = 'artist:' + artist + ' track:' + track
             else:
-                q = 'track:' + track_by_artist
+                track = track_by_artist
+                q = 'track:' + track
             
             # find track and add to queue
             

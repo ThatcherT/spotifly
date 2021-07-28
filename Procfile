@@ -1,1 +1,1 @@
-web: gunicorn spotifly:app
+web: gunicorn music.wsgi

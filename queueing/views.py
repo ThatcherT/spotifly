@@ -109,7 +109,7 @@ def sms_failed(request):
     """
     resp = MessagingResponse()
     resp.message("We're sorry, something went wrong on our end.")
-    return Response(resp)
+    return HttpResponse(str(resp))
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -153,7 +153,7 @@ class SMS(APIView):
             if not LOCAL:
                 resp = MessagingResponse()
                 resp.message("Please visit this link to authenticate: https://spotif-l-y.herokuapp.com/spotify_oauth/{}".format(listener.id))
-                return Response(resp)
+                return HttpResponse(str(resp))
             return Response("Please visit this link to authenticate: http://127.0.0.1:8000/spotify_oauth/{}".format(listener.id))
 
         elif message_body.startswith('follow'):
@@ -166,11 +166,9 @@ class SMS(APIView):
             
 
             if not LOCAL:
-                message = client.messages.create(
-                    to=from_number,
-                    from_="14243735305",
-                    body=f"You are now following {user.name}. Add a track to their queue by texting 'queue (song title')"
-                )
+                resp = MessagingResponse()
+                resp.message("You are now following {user.name}. Add a track to their queue by texting 'queue (song title')")
+                return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
 
         elif message_body.startswith('queue'):
@@ -181,7 +179,7 @@ class SMS(APIView):
                 if not LOCAL:
                     resp = MessagingResponse()
                     resp.message(f"It appears you aren't following anybody... Try 'follow thatcher thornberry'")
-                    return Response(resp)
+                    return HttpResponse(str(resp))
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
                 listener = Listener.objects.get(name=follower.following)
@@ -206,19 +204,14 @@ class SMS(APIView):
                 sp.add_to_queue(uri, device_id=None)
             except:
                 if not LOCAL:
-                    message = client.messages.create(
-                            to=from_number,
-                            from_="14243735305",
-                            body=f"It appears {follower.name} is not listening to music right now. Give them the AUX."
-                        )
-
-            # tell user their song is queued
+                    resp = MessagingResponse()
+                    resp.message(f"It appears {follower.name} is not listening to music right now. Give them the AUX.")
+                    return HttpResponse(str(resp))
             if not LOCAL:
-                message = client.messages.create(
-                        to=from_number,
-                        from_="14243735305",
-                        body=f"We queued {track}."
-                    )
+                # tell user their song is queued
+                resp = MessagingResponse()
+                resp.message(f"We queued {track}.")
+                return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
 
         else:

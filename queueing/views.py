@@ -15,7 +15,7 @@ from twilio.rest import Client
 from decouple import config
 from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
-
+from django.shortcuts import render
 
 class ListenerList(APIView):
     """
@@ -62,7 +62,7 @@ class ListenerDetail(APIView):
         listener.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-        
+@csrf_exempt
 def get_sp_url(request):
     cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
@@ -74,8 +74,17 @@ def get_sp_url(request):
     )
     return JsonResponse(sp_oauth.get_authorize_url(), safe=False)
 
-
+@csrf_exempt
 def redirect(request):
+    if request.method == 'POST':
+        if request.POST.get('name'):
+            token = request.POST['token']
+            name = request.POST['name']
+            listener, created = Listener.objects.update_or_create(name=name)
+            listener.token = token
+            listener.save()
+            print('listener', name, 'has token', token)
+            return render(request, 'success.html', {"name": name})
     cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
@@ -84,9 +93,17 @@ def redirect(request):
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
         cache_handler=cache
     )
-    token_info = sp_oauth.get_cached_token()
-    return JsonResponse(token_info, safe=False)
+    # get code from url
+    url = request.build_absolute_uri()
+    try:
+        token = url.split('?code=')[1]
+    except:
+        token = None
 
+    # load register page
+    return render(request, 'register.html', {'token': token})
+
+@csrf_exempt
 def spotify_oauth(request, listener_id):
     """
     Get Access Token for Spotify user using spotipy.oauth2.SpotifyOAuth
@@ -170,16 +187,11 @@ class SMS(CsrfExemptMixin, APIView):
         print(message_body)
         print(from_number)
         if message_body.startswith('register'):
-            # Send a text message to the user telling them to visit the link to use spotify oath
-            # create listener
-            name = message_body.partition(' ')[-1]
-            listener, created = Listener.objects.get_or_create(name=name, number=from_number)
-
             if not LOCAL:
                 resp = MessagingResponse()
-                resp.message("Please visit this link to authenticate: https://spotif-l-y.herokuapp.com/spotify_oauth/{}".format(listener.id))
+                resp.message("Please visit this link to authenticate: https://spotif-l-y.herokuapp.com/get-url")
                 return HttpResponse(str(resp))
-            return Response("Please visit this link to authenticate: http://127.0.0.1:8000/spotify_oauth/{}".format(listener.id))
+            return Response("Please visit this link to authenticate: http://127.0.0.1:8000/get-url")
 
         elif message_body.startswith('follow'):
             # get user from database
@@ -187,7 +199,7 @@ class SMS(CsrfExemptMixin, APIView):
             # get user
             print(following)
             user = Listener.objects.get(name=following)
-            follower, created = Follower.objects.get_or_create(number=from_number, following=following)
+            follower, created = Follower.objects.update_or_create(number=from_number, following=following)
             
 
             if not LOCAL:

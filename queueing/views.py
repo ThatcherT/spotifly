@@ -80,9 +80,7 @@ def redirect(request):
         if request.POST.get('name'):
             token = request.POST['token']
             name = request.POST['name']
-            listener, created = Listener.objects.update_or_create(name=name)
-            listener.token = token
-            listener.save()
+            listener, created = Listener.objects.update_or_create(name=name, defaults={'token': token})
             print('listener', name, 'has token', token)
             return render(request, 'success.html', {"name": name})
     cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
@@ -187,9 +185,17 @@ class SMS(CsrfExemptMixin, APIView):
         print(message_body)
         print(from_number)
         if message_body.startswith('register'):
+            cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+            sp_oauth = spotipy.oauth2.SpotifyOAuth(
+                config('SPOTIPY_CLIENT_ID'),
+                config('SPOTIPY_CLIENT_SECRET'),
+                config('SPOTIPY_REDIRECT_URI'),
+                scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
+                cache_handler=cache
+            )
             if not LOCAL:
                 resp = MessagingResponse()
-                resp.message("Please visit this link to authenticate: https://spotif-l-y.herokuapp.com/get-url")
+                resp.message(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
                 return HttpResponse(str(resp))
             return Response("Please visit this link to authenticate: http://127.0.0.1:8000/get-url")
 
@@ -198,8 +204,16 @@ class SMS(CsrfExemptMixin, APIView):
             following = message_body.partition(' ')[-1]
             # get user
             print(following)
-            user = Listener.objects.get(name=following)
-            follower, created = Follower.objects.update_or_create(number=from_number, following=following)
+            try:
+                user = Listener.objects.get(name=following)
+            except:
+                # send message saying this user doesn't exist
+                if not LOCAL:
+                    resp = MessagingResponse()
+                    resp.message("This user doesn't exist. They need to text this number 'register'.")
+                    return HttpResponse(str(resp))
+                return Response("This user doesn't exist. They need to text this number 'register'.")
+            follower, created = Follower.objects.update_or_create(number=from_number, following=following, defaults={"following": following})
             
 
             if not LOCAL:

@@ -142,7 +142,7 @@ class SMS(CsrfExemptMixin, APIView):
         # Get the text message from the request
         message_body = request.data.get('Body').lower()
         # Get the sender's phone number from the request
-        from_number = str(request.data.get('From'))
+        from_number = str(request.data.get('From'))[1:]
         print(message_body)
         print(from_number)
         if message_body.startswith('register'):

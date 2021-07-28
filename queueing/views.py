@@ -62,6 +62,30 @@ class ListenerDetail(APIView):
         listener.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+        
+def get_sp_url(request):
+    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    sp_oauth = spotipy.oauth2.SpotifyOAuth(
+        config('SPOTIPY_CLIENT_ID'),
+        config('SPOTIPY_CLIENT_SECRET'),
+        config('SPOTIPY_REDIRECT_URI'),
+        scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
+        cache_handler=cache
+    )
+    return JsonResponse(sp_oauth.get_authorize_url(), safe=False)
+
+
+def redirect(request):
+    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    sp_oauth = spotipy.oauth2.SpotifyOAuth(
+        config('SPOTIPY_CLIENT_ID'),
+        config('SPOTIPY_CLIENT_SECRET'),
+        config('SPOTIPY_REDIRECT_URI'),
+        scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
+        cache_handler=cache
+    )
+    token_info = sp_oauth.get_cached_token()
+    return JsonResponse(token_info, safe=False)
 
 def spotify_oauth(request, listener_id):
     """

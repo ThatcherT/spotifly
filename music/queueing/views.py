@@ -60,6 +60,48 @@ class ListenerDetail(APIView):
         listener.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+def spotify_oauth(request, listener_id):
+    """
+    Get Access Token for Spotify user using spotipy.oauth2.SpotifyOAuth
+    """
+    # get listener
+    listener = Listener.objects.get(pk=listener_id)
+    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    sp_oauth = spotipy.oauth2.SpotifyOAuth(
+        config('SPOTIPY_CLIENT_ID'),
+        config('SPOTIPY_CLIENT_SECRET'),
+        config('SPOTIPY_REDIRECT_URI'),
+        scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
+        cache_handler=cache
+    )
+    access_token = ""
+    token_info = sp_oauth.get_cached_token()
+    if token_info:
+        # we found access token in the cache
+        print('found token')
+        access_token = token_info['access_token']
+    else:
+        # get request url
+        sp = spotipy.Spotify(auth_manager=sp_oauth)
+        results = sp.current_user_saved_tracks()
+
+        # get access token and cache it
+        token_info = sp_oauth.get_cached_token()
+        access_token = token_info['access_token']
+    if access_token:
+        # we have the access token, trying to get user info
+        print('getting user info')
+        sp = spotipy.Spotify(access_token)
+        results = sp.current_user()
+        listener.token = access_token
+        listener.spotify_id = results['display_name']
+        listener.save()
+        return JsonResponse(results, safe=False)
+    else:
+        return "<a href='" + sp_oauth.get_authorize_url() + "'>Login to Spotify</a>"
+
+
 def sms_failed(request):
     """
     Send failure message if twilio webhook triggers it
@@ -67,6 +109,7 @@ def sms_failed(request):
     resp = MessagingResponse()
     resp.message("We're sorry, something went wrong on our end.")
     return Response(resp)
+
 
 class SMS(APIView):
     """
@@ -85,6 +128,7 @@ class SMS(APIView):
     
     def post(self, request, format=None):
         # Get the account_sid from the config file
+        LOCAL=config('LOCAL', default=False)
         account_sid = config('ACCOUNT_SID')
         
         # Get the auth_token from the config file
@@ -98,44 +142,61 @@ class SMS(APIView):
         client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 
-        CLIENT_SECRET = config('CLIENT_SECRET')
-        CLIENT_ID = config('CLIENT_ID')
+        SPOTIPY_CLIENT_SECRET = config('SPOTIPY_CLIENT_SECRET')
+        SPOTIPY_CLIENT_ID = config('SPOTIPY_CLIENT_ID')
 
-        sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
-            client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET,
-            redirect_uri='http://localhost:8888/callback',
-            scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played']))
+        
         # Get the text message from the request
         message_body = request.data.get('Body').lower()
         # Get the sender's phone number from the request
-        from_number = request.data.get('From')
+        from_number = str(request.data.get('From'))
         
         if message_body.startswith('register'):
             # Send a text message to the user telling them to visit the link to use spotify oath
-            message = client.messages.create(
-                to=from_number,
-                from_="14243735305",
-                body="Please visit this link to authenticate: https://accounts.spotify.com/authorize?client_id=%s&response_type=code&redirect_uri=http://localhost:8888/callback" % CLIENT_ID
-            )
-            return Response(status=status.HTTP_200_OK)
+            # create listener
+            name = message_body.partition(' ')[-1]
+            listener, created = Listener.objects.get_or_create(name=name, number=from_number)
+
+            if not LOCAL:
+                resp = MessagingResponse()
+                resp.message("Please visit this link to authenticate: https://spotif-l-y.herokuapp.com/spotify_oauth/{}".format(listener.id))
+                return Response(resp)
+            return Response("Please visit this link to authenticate: http://127.0.0.1:8000/spotify_oauth/{}".format(listener.id))
 
         elif message_body.startswith('follow'):
-            # Send a text message to the user telling them to follow someone
             # get user from database
-            name = message_body.split(' ')[1]
-            follower = Follower.objects.create(number=from_number, name=name)
-            user = Listener.objects.get(name=name)
+            following = message_body.partition(' ')[-1]
+            # get user
+            print(following)
+            user = Listener.objects.get(name=following)
+            follower, created = Follower.objects.get_or_create(number=from_number, following=following)
+            
 
-            message = client.messages.create(
-                to=from_number,
-                from_="14243735305",
-                body=f"You are now following {user.name}. Add a track to their queue by texting 'queue (song title')"
-            )
+            if not LOCAL:
+                message = client.messages.create(
+                    to=from_number,
+                    from_="14243735305",
+                    body=f"You are now following {user.name}. Add a track to their queue by texting 'queue (song title')"
+                )
             return Response(status=status.HTTP_200_OK)
 
         elif message_body.startswith('queue'):
+            
             # Get the song that the user has queued
+            follower, created = Follower.objects.get_or_create(number=from_number)
+            if not follower.following:
+                if not LOCAL:
+                    resp = MessagingResponse()
+                    resp.message(f"It appears you aren't following anybody... Try 'follow thatcher thornberry'")
+                    return Response(resp)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            else:
+                listener = Listener.objects.get(name=follower.following)
+                if not listener.token:
+                    if not LOCAL:
+                        resp = MessagingResponse()
+                        resp.message(f"It appears the person you're following hasn't authenticated their account yet. Tell them to 'register'")
+                sp = spotipy.Spotify(listener.token)
             track_by_artist = message_body.partition(' ')[-1]
             if 'by' in track_by_artist:
                 track_by_artist = track_by_artist.split(' by ')
@@ -148,15 +209,27 @@ class SMS(APIView):
             # find track and add to queue
             
             uri = sp.search(q=q, type='track', market='US')['tracks']['items'][0]['id']
-            sp.add_to_queue(uri, device_id=None)
+            try:
+                sp.add_to_queue(uri, device_id=None)
+            except:
+                if not LOCAL:
+                    message = client.messages.create(
+                            to=from_number,
+                            from_="14243735305",
+                            body=f"It appears {follower.name} is not listening to music right now. Give them the AUX."
+                        )
 
             # tell user their song is queued
-            message = client.messages.create(
-                    to=from_number,
-                    from_="14243735305",
-                    body=f"We queued {track}."
-                )
+            if not LOCAL:
+                message = client.messages.create(
+                        to=from_number,
+                        from_="14243735305",
+                        body=f"We queued {track}."
+                    )
             return Response(status=status.HTTP_200_OK)
+
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         # elif message_body == 'Help':
         #     # get spotify 
 

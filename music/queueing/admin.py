@@ -1,3 +1,6 @@
 from django.contrib import admin
+from queueing.models import *
+# register listener model
 
-# Register your models here.
+admin.site.register(Listener)
+admin.site.register(Follower)

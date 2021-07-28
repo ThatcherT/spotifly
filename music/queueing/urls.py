@@ -7,6 +7,7 @@ urlpatterns = [
     path('listeners/<int:pk>/', views.ListenerDetail.as_view()),
     path('sms/', views.SMS.as_view()),
     path('sms-failed/', views.sms_failed),
+    path('spotify_oauth/<int:listener_id>/', views.spotify_oauth),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

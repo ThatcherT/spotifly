@@ -213,7 +213,9 @@ class SMS(CsrfExemptMixin, APIView):
                     resp.message("This user doesn't exist. They need to text this number 'register'.")
                     return HttpResponse(str(resp))
                 return Response("This user doesn't exist. They need to text this number 'register'.")
-            follower, created = Follower.objects.update_or_create(number=from_number, following=following, defaults={"following": following})
+            follower, created = Follower.objects.get_or_create(number=from_number)
+            follower.following = following
+            follower.save()
             
 
             if not LOCAL:

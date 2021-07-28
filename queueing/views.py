@@ -13,7 +13,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from twilio.rest import Client
 from decouple import config
-
+from rest_framework.decorators import api_view
 
 class ListenerList(APIView):
     """
@@ -101,7 +101,7 @@ def spotify_oauth(request, listener_id):
     else:
         return "<a href='" + sp_oauth.get_authorize_url() + "'>Login to Spotify</a>"
 
-
+@api_view(('POST',))
 @csrf_exempt
 def sms_failed(request):
     """

@@ -15,6 +15,15 @@ from twilio.rest import Client
 from decouple import config
 from rest_framework.decorators import api_view
 
+
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication 
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+
+    def enforce_csrf(self, request):
+        return  # To not perform the csrf check previously happening
+
+
 class ListenerList(APIView):
     """
     List all listeners, or create a new listener.
@@ -112,7 +121,6 @@ def sms_failed(request):
     return HttpResponse(str(resp))
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SMS(APIView):
     """
     All Texts are Routed Here. Then, we'll send a message to the other relevant api functions.
@@ -127,8 +135,9 @@ class SMS(APIView):
 
     """
     
-    
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     def post(self, request, format=None):
+        authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
         # Get the account_sid from the config file
         LOCAL=config('LOCAL', default=False)
 

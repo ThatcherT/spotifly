@@ -95,7 +95,8 @@ def redirect(request):
     url = request.build_absolute_uri()
     try:
         code = url.split('?code=')[1]
-        token = sp_oauth.get_access_token(code)
+        token_info = sp_oauth.get_access_token(code)
+        token = token_info['access_token']
     except:
         token = None
 

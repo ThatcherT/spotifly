@@ -116,7 +116,7 @@ def redirect(request):
         if request.POST.get('name'):
             token = request.POST['token']
             name = request.POST['name']
-            listener = Listener.objects.get(name=name)
+            listener, created = Listener.objects.get_or_create(name=name)
             #todo add check for token
             listener.token = token
             listener.save()

@@ -62,6 +62,47 @@ class ListenerDetail(APIView):
         listener.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+        
+@csrf_exempt
+def get_access_token(request):
+    """
+    Get access token for spotify
+    """
+    sp_oauth = spotipy.oauth2.SpotifyOAuth(
+        config('SPOTIPY_CLIENT_ID'),
+        config('SPOTIPY_CLIENT_SECRET'),
+        config('SPOTIPY_REDIRECT_URI'),
+        scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
+        cache_path = './tokees/',
+    )
+    access_token = ""
+    
+    token_info = sp_oauth.get_cached_token()
+
+    if token_info:
+        print("found cached token!")
+        access_token = token_info['access_token']
+    else:
+        url = request.build_absolute_uri()
+        code = sp_oauth.parse_response_code(url)
+        if code:
+            print("found spotify auth code in request url! trying to get valid access token...")
+            token_info = sp_oauth.get_access_token(code)
+            access_token = token_info['access_token']
+    
+    if access_token:
+        print("access token available... trying to get user info...")
+        sp = spotipy.Spotify(access_token)
+        user = sp.current_user()
+        return user
+    else:
+        return None
+
+    
+
+
+
+
 @csrf_exempt
 def get_sp_url(request):
     cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
@@ -70,8 +111,7 @@ def get_sp_url(request):
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_handler=cache
-    )
+        cache_path='./tokees/'    )
     return JsonResponse(sp_oauth.get_authorize_url(), safe=False)
 
 @csrf_exempt
@@ -266,7 +306,7 @@ class SMS(CsrfExemptMixin, APIView):
             except:
                 if not LOCAL:
                     resp = MessagingResponse()
-                    resp.message(f"It appears {follower.name} is not listening to music right now. Give them the AUX.")
+                    resp.message(f"It appears {follower.following} is not listening to music right now. Give them the AUX.")
                     return HttpResponse(str(resp))
             if not LOCAL:
                 # tell user their song is queued

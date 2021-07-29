@@ -8,7 +8,7 @@ urlpatterns = [
     path('sms/', views.SMS.as_view()),
     path('sms-failed/', views.sms_failed),
     path('spotify_oauth/<int:listener_id>/', views.spotify_oauth),
-    path('redirect/', views.redirect),
+    path('redirect/', views.get_access_token),
     path('get-url/', views.get_sp_url),
 ]
 

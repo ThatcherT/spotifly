@@ -62,7 +62,7 @@ class ListenerDetail(APIView):
         listener.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-        
+
 @csrf_exempt
 def get_access_token(request):
     """
@@ -136,12 +136,9 @@ def redirect(request):
     )
     # get code from url
     url = request.build_absolute_uri()
-    try:
-        code = url.split('?code=')[1]
-        token_info = sp_oauth.get_access_token(code)
-        token = token_info['access_token']
-    except:
-        token = None
+    code = url.split('?code=')[1]
+    token_info = sp_oauth.get_access_token(code)
+    token = token_info['access_token']
 
     # load register page
     return render(request, 'register.html', {'token': token})

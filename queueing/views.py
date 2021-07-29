@@ -152,7 +152,7 @@ def spotify_oauth(request, listener_id):
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_path='./tokees/',
+        # cache_path='./tokees/',
         # cache_handler=cache,
     )
     access_token = ""

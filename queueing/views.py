@@ -73,7 +73,6 @@ def get_access_token(request):
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_path = './tokees/',
     )
     access_token = ""
     
@@ -107,7 +106,6 @@ def get_sp_url(request):
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_path='./tokees/',
         )
     return JsonResponse(sp_oauth.get_authorize_url(), safe=False)
 
@@ -129,7 +127,7 @@ def redirect(request):
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_path='./tokees/',
+        # cache_path='./tokees/',
         # cache_handler=cache,
     )
     # get code from url
@@ -238,7 +236,7 @@ class SMS(CsrfExemptMixin, APIView):
                 resp = MessagingResponse()
                 resp.message(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
                 return HttpResponse(str(resp))
-            return Response("Please visit this link to authenticate: http://127.0.0.1:8000/get-url")
+            return Response(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
 
         elif message_body.startswith('follow'):
             # get user from database

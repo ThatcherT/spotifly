@@ -98,20 +98,17 @@ def get_access_token(request):
     else:
         return None
 
-    
-
-
-
 
 @csrf_exempt
 def get_sp_url(request):
-    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_path='./tokees/'    )
+        cache_path='./tokees/',
+        )
     return JsonResponse(sp_oauth.get_authorize_url(), safe=False)
 
 @csrf_exempt
@@ -126,13 +123,14 @@ def redirect(request):
             listener.save()
             print('listener', name, 'has token', token)
             return render(request, 'success.html', {"name": name})
-    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_handler=cache
+        cache_path='./tokees/',
+        # cache_handler=cache,
     )
     # get code from url
     url = request.build_absolute_uri()
@@ -150,13 +148,14 @@ def spotify_oauth(request, listener_id):
     """
     # get listener
     listener = Listener.objects.get(pk=listener_id)
-    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_handler=cache
+        cache_path='./tokees/',
+        # cache_handler=cache,
     )
     access_token = ""
     token_info = sp_oauth.get_cached_token()

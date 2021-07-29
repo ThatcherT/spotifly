@@ -117,7 +117,6 @@ def redirect(request):
             token = request.POST['token']
             name = request.POST['name']
             listener, created = Listener.objects.get_or_create(name=name)
-            #todo add check for token
             listener.token = token
             listener.save()
             print('listener', name, 'has token', token)
@@ -219,12 +218,12 @@ class SMS(CsrfExemptMixin, APIView):
 
         
         # Get the text message from the request
-        message_body = request.data.get('Body').lower()
+        message_body = request.data.get('Body')
         # Get the sender's phone number from the request
         from_number = str(request.data.get('From'))[2:]
         print(message_body)
         print(from_number)
-        if message_body.startswith('register'):
+        if message_body.lower().startswith('register'):
             cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
             sp_oauth = spotipy.oauth2.SpotifyOAuth(
                 config('SPOTIPY_CLIENT_ID'),
@@ -239,7 +238,7 @@ class SMS(CsrfExemptMixin, APIView):
                 return HttpResponse(str(resp))
             return Response(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
 
-        elif message_body.startswith('follow'):
+        elif message_body.lower().startswith('follow'):
             # get user from database
             following = message_body.partition(' ')[-1]
             # get user
@@ -264,7 +263,7 @@ class SMS(CsrfExemptMixin, APIView):
                 return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
 
-        elif message_body.startswith('queue'):
+        elif message_body.lower().startswith('queue'):
             
             # Get the song that the user has queued
             follower, created = Follower.objects.get_or_create(number=from_number)
@@ -311,8 +310,11 @@ class SMS(CsrfExemptMixin, APIView):
             return Response(status=status.HTTP_200_OK)
 
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        # elif message_body == 'Help':
-        #     # get spotify 
+            if not LOCAL:
+                # tell user their song is queued
+                resp = MessagingResponse()
+                resp.message("Sorry. I didn't understand that. The commands are register, follow, and queue.")
+                return HttpResponse(str(resp))
+            return Response("Sorry. I didn't understand that. The commands are register, follow, and queue.")
 
 

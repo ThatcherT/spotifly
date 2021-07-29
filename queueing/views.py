@@ -224,13 +224,13 @@ class SMS(CsrfExemptMixin, APIView):
         print(message_body)
         print(from_number)
         if message_body.startswith('register'):
-            cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+            # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
             sp_oauth = spotipy.oauth2.SpotifyOAuth(
                 config('SPOTIPY_CLIENT_ID'),
                 config('SPOTIPY_CLIENT_SECRET'),
                 config('SPOTIPY_REDIRECT_URI'),
                 scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-                cache_handler=cache
+                # cache_handler=cache
                 )
             if not LOCAL:
                 resp = MessagingResponse()

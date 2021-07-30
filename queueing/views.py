@@ -16,6 +16,8 @@ from decouple import config
 from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
 from django.shortcuts import render
+import os
+
 
 class ListenerList(APIView):
     """
@@ -100,13 +102,13 @@ def get_access_token(request):
 
 @csrf_exempt
 def get_sp_url(request):
-    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        cache_handler=cache
+        # cache_handler=cache
         )
     return JsonResponse(sp_oauth.get_authorize_url(), safe=False)
 
@@ -121,14 +123,14 @@ def redirect(request):
             listener.save()
             print('listener', name, 'has token', token)
             return render(request, 'success.html', {"name": name})
-    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
         # cache_path='./tokees/',
-        cache_handler=cache,
+        # cache_handler=cache,
     )
     # get code from url
     url = request.build_absolute_uri()
@@ -146,14 +148,14 @@ def spotify_oauth(request, listener_id):
     """
     # get listener
     listener = Listener.objects.get(pk=listener_id)
-    cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+    # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
     sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
         config('SPOTIPY_CLIENT_SECRET'),
         config('SPOTIPY_REDIRECT_URI'),
         scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
         # cache_path='./tokees/',
-        cache_handler=cache,
+        # cache_handler=cache,
     )
     access_token = ""
     token_info = sp_oauth.get_cached_token()
@@ -224,13 +226,13 @@ class SMS(CsrfExemptMixin, APIView):
         print(message_body)
         print(from_number)
         if message_body.lower().startswith('register'):
-            cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
+            # cache = spotipy.cache_handler.DjangoSessionCacheHandler(request)
             sp_oauth = spotipy.oauth2.SpotifyOAuth(
                 config('SPOTIPY_CLIENT_ID'),
                 config('SPOTIPY_CLIENT_SECRET'),
                 config('SPOTIPY_REDIRECT_URI'),
                 scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-                cache_handler=cache
+                # cache_handler=cache
                 )
             if not LOCAL:
                 resp = MessagingResponse()
@@ -264,24 +266,42 @@ class SMS(CsrfExemptMixin, APIView):
             return Response(status=status.HTTP_200_OK)
 
         elif message_body.lower().startswith('queue'):
-            
+            # sp_oauth = spotipy.oauth2.SpotifyOAuth(
+            #     config('SPOTIPY_CLIENT_ID'),
+            #     config('SPOTIPY_CLIENT_SECRET'),
+            #     config('SPOTIPY_REDIRECT_URI'),
+            #     scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
+            #     # cache_handler=cache
+            #     )
+            SPOTIPY_CLIENT_SECRET=config('SPOTIPY_CLIENT_SECRET')
+            SPOTIPY_CLIENT_ID=config('SPOTIPY_CLIENT_ID')
+            # SPOTIPY_REDIRECT_URI='https://spotif-l-y.herokuapp.com/redirect'
+            SPOTIPY_REDIRECT_URI=config('SPOTIPY_REDIRECT_URI')
+            os.environ['SPOTIPY_CLIENT_ID'] = SPOTIPY_CLIENT_ID
+            os.environ['SPOTIPY_CLIENT_SECRET'] = SPOTIPY_CLIENT_SECRET
+            os.environ['SPOTIPY_REDIRECT_URI'] = SPOTIPY_REDIRECT_URI
+            scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played']
+
+            sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
             # Get the song that the user has queued
             follower, created = Follower.objects.get_or_create(number=from_number)
-            if not follower.following:
-                if not LOCAL:
-                    resp = MessagingResponse()
-                    resp.message(f"It appears you aren't following anybody... Try 'follow thatcher thornberry'")
-                    return HttpResponse(str(resp))
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            else:
-                listener = Listener.objects.get(name=follower.following)
-                if not listener.token:
-                    if not LOCAL:
-                        resp = MessagingResponse()
-                        resp.message(f"It appears the person you're following hasn't authenticated their account yet. Tell them to 'register'")
-                        return HttpResponse(str(resp))
-                print(listener.token)
-                sp = spotipy.Spotify(listener.token)
+            # if not follower.following:
+            #     if not LOCAL:
+            #         resp = MessagingResponse()
+            #         resp.message(f"It appears you aren't following anybody... Try 'follow thatcher'")
+            #         return HttpResponse(str(resp))
+            #     return Response(status=status.HTTP_400_BAD_REQUEST)
+            # else:
+                # listener = Listener.objects.get(name=follower.following)
+                # if not listener.token:
+                #     if not LOCAL:
+                #         resp = MessagingResponse()
+                #         resp.message(f"It appears the person you're following hasn't authenticated their account yet. Tell them to 'register'")
+                        # return HttpResponse(str(resp))
+                # print(listener.token)
+                # token_info = sp_oauth.get_cached_token()
+                # access_token = token_info['access_token']
+                # sp = spotipy.Spotify(access_token)
             track_by_artist = message_body.partition(' ')[-1]
             if 'by' in track_by_artist:
                 track_by_artist = track_by_artist.split(' by ')

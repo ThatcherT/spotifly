@@ -12,7 +12,7 @@ class Listener(models.Model):
 
 class Follower(models.Model):
     number = models.CharField(max_length=10, unique=True)
-    following = models.CharField(max_length=50) # corresponds to name
+    following = models.CharField(max_length=50, default='thatcher') # corresponds to name
     following_spotify_id = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):

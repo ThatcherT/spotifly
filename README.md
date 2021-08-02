@@ -1,9 +1,14 @@
 # Spotifly
 Giving Spotify Wings.
 ## Components
-### Flask
-Flask Server running at https://spotif-l-y.herokuapp.com/
+### Web Framework
+Python Web Framework with Django
+REST API with Django REST Framework
+### Web Server
+Gunicorn Web server running at https://spotif-l-y.herokuapp.com/
+### Database
+Postgresql Relational Database
 ### SMS
 Twilio API
-### Spotify
+### Music/Queueing
 Spotify API interfaced with helpful package: spotipy

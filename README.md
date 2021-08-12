@@ -1,5 +1,7 @@
 # Spotifly
 Giving Spotify Wings.
+## How it works
+Users can text a certain phone number to create an account, follow their friends, and queue songs. By texting, their message is sent from the Twilio API to our Django API, then to the spotify API to do the actual queueing.
 ## Components
 ### Web Framework
 Python Web Framework with Django

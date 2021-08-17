@@ -14,7 +14,7 @@ idna==3.2
 itsdangerous==2.0.1
 Jinja2==3.0.1
 MarkupSafe==2.0.1
-psycopg2==2.9.1
+psycopg2-binary==2.9.1
 Pygments==2.9.0
 PyJWT==1.7.1
 PySocks==1.7.1

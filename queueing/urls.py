@@ -3,6 +3,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from queueing import views
 
 urlpatterns = [
+    path('', views.home, name='home'),
+    path('new-listener/<lid>/', views.new_listener, name='new-listener'),
     path('listeners/', views.ListenerList.as_view()),
     path('listeners/<int:pk>/', views.ListenerDetail.as_view()),
     path('sms/', views.SMS.as_view()),

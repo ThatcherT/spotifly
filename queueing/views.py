@@ -1,4 +1,5 @@
 from django.http import HttpResponse, JsonResponse
+from django.http.response import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from queueing.models import Listener, Follower
@@ -10,14 +11,66 @@ from rest_framework.response import Response
 from rest_framework import status
 from twilio.twiml.messaging_response import MessagingResponse
 import spotipy
+from django.urls import reverse
+from django.shortcuts import render, redirect
 from spotipy.oauth2 import SpotifyOAuth
 from twilio.rest import Client
 from decouple import config
 from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
-from django.shortcuts import render
 import os
+from django.core.mail import send_mail
+from quoters import Quote
 
+def new_listener(request, lid):
+    listener = Listener.objects.get(id=lid)
+    if request.method == 'POST':
+        # update listener object
+        listener.name = request.POST.get('name')
+        listener.email = request.POST.get('email')
+        listener.number = request.POST.get('number')
+        listener.save()
+
+
+        # send an email to thatcherthornberry saying someone signed up
+        subject = 'New Listener'
+        html_message = '<h1>Someone signed up!</h1>'
+        html_message += '<p>Email: ' + listener.email + '</p>'
+        from_email = config('EMAIL_FROM_USER')
+        to_email = 'thatcherthornberry@gmail.com'
+        send_mail(subject, html_message, from_email, [to_email], html_message=html_message)
+        
+        # send an email to person thanking them, giving them info
+        subject2 = 'Thank you for signing up!'
+        html_message2 = '<h1>Thank you for signing up!</h1>'
+        html_message2 += '<p>I have to manually add you to a database to grant you access to my app. I will email you when you have access.</p>'
+        html_message2 += '<p>After that, you will receive a text with more instructions.</p>'
+        html_message2 += '<p>In the meantime, enjoy this quote:</p>'
+        quote = Quote.print()
+        html_message2 += f'<p>{quote}</p>'
+        from_email2 = config('EMAIL_FROM_USER')
+        to_email = listener.email
+        send_mail(subject2, html_message2, from_email2, [to_email], html_message=html_message2)
+
+        return render(request, 'new_listener.html', {'success': True})
+    if not listener.number:
+        return render(request, 'new_listener.html', {'listener': listener})
+    else:
+        return render(request, 'new_listener.html', {'signedup': True})
+def home(request):
+    # if post, save email to db
+    if request.method == 'POST':
+        print('yoasted')
+        email = request.POST.get('email')
+        name = email.split('@')[0]
+        # save email to db
+        listener, created = Listener.objects.get_or_create(email=email, name=name)
+        if created:
+            print('created')
+            # maybe do something here to strengthen model?
+        # return success
+        return HttpResponseRedirect(reverse('new-listener', args=(listener.id,)))
+    return render(request, 'home.html')
 
 class ListenerList(APIView):
     """

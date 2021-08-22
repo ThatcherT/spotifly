@@ -12,8 +12,8 @@ class Command(BaseCommand):
             
             user = User.objects.create(
                 username = 'thatcher',
-                email = 'admin@spotifly.com',
                 is_superuser = True,
+                is_staff = True,
             )
             user.set_password('pizza891')
             print(user.username, user.email, 'pizza891')

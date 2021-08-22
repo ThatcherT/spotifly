@@ -4,8 +4,9 @@ class Listener(models.Model):
     name = models.CharField(max_length=50, unique=True)
     spotify_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
     token = models.TextField(blank=True, null=True)
-    # number = models.CharField(max_length=10, unique=True)
+    number = models.CharField(max_length=10, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    email = models.EmailField(blank=True, null=True)
         
     def __str__(self):
         return self.name

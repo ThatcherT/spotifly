@@ -20,7 +20,6 @@ from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
 import os
 from django.core.mail import send_mail
-from quoters import Quote
 
 def new_listener(request, lid):
     listener = Listener.objects.get(id=lid)
@@ -45,9 +44,6 @@ def new_listener(request, lid):
         html_message2 = '<h1>Thank you for signing up!</h1>'
         html_message2 += '<p>I have to manually add you to a database to grant you access to my app. I will email you when you have access.</p>'
         html_message2 += '<p>After that, you will receive a text with more instructions.</p>'
-        html_message2 += '<p>In the meantime, enjoy this quote:</p>'
-        quote = Quote.print()
-        html_message2 += f'<p>{quote}</p>'
         from_email2 = config('EMAIL_FROM_USER')
         to_email = listener.email
         send_mail(subject2, html_message2, from_email2, [to_email], html_message=html_message2)

@@ -4,25 +4,33 @@ volumes:
   spotiflypgdata:
 
 services:
-  spotiflypostgres:
-    restart: always
-    image: postgres:12.0-alpine
-    volumes:
-      - spotiflypgdata:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-    env_file:
-      - .env
+  # nginx:
+  #   image: nginx:1.15-alpine
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - spotiflyweb
+  #   volumes:
+  #     - ./data/nginx:/etc/nginx/conf.d
+  # spotiflypostgres:
+  #   restart: always
+  #   image: postgres:12.0-alpine
+  #   volumes:
+  #     - spotiflypgdata:/var/lib/postgresql/data
+  #   ports:
+  #     - 5432:5432
+  #   env_file:
+  #     - .env
   spotiflyweb:
     restart: always
     build: .
-    image: spotifly
-    command: gunicorn music.wsgi:application -b "0.0.0.0:8000"
-    # expose:
-    #   - "8000"
-    ports:
-      - 8000:8000
+    image: thatcherthornberry/spotifly:latest
+    command: gunicorn music.wsgi:application --bind 0.0.0.0:8001
+    expose:
+      - "8001"
     env_file:
       - .env
-    depends_on:
-      - spotiflypostgres
+networks:
+  default:
+    external: true
+    name: thatcherthornberry

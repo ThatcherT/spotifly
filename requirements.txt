@@ -5,9 +5,10 @@ charset-normalizer==2.0.4
 Django==3.2.6
 django-braces==1.14.0
 djangorestframework==3.12.4
+gunicorn==20.1.0
 html5lib==1.1
 idna==3.2
-lxml==4.6.3
+lxml==4.4.1
 psycopg2-binary==2.9.1
 PyJWT==1.7.1
 python-decouple==3.4

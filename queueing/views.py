@@ -126,7 +126,9 @@ def get_song(request, lid):
     if listener.token:
         sp = spotipy.Spotify(auth=listener.token)
         try:
-            results = sp.current_user_playing_track()
+            q = 'let it happen'
+            results = sp.search(q=q, type='track', market='US')
+            print(results)
         except SpotifyException as e:
             if 'The access token expired' in e.msg:
                 print('token exp')
@@ -140,11 +142,23 @@ def get_song(request, lid):
 
                 # update sp with new token
                 sp = spotipy.Spotify(auth=listener.token)
-                results = sp.current_user_playing_track()
+                q = 'let it happen'
+                results = sp.search(q=q, type='track', market='US')
+                print(results)
+        
+        # get song info
+        song = results['tracks']['items'][0]
+        song_id = song['id']
+        song_name = song['name']
+        song_artist = song['artists'][0]['name']
+        song_album = song['album']['name']
+        song_uri = song['uri']
+
+
 
         if results:
-            track = results['item']
-            return render(request, 'song.html', {'track': track})
+            track = results
+            return render(request, 'song.html', {'track': results})
         else:
             return render(request, 'song.html', {'track': None})
     else:
@@ -403,11 +417,12 @@ class SMS(CsrfExemptMixin, APIView):
                         return HttpResponse(str(resp))
                     return Response(status=status.HTTP_400_BAD_REQUEST)
             
-            # check if var is a list
-            if isinstance(track_by_artist, list):
-                queue_msg = f"Added `{track_by_artist[0]}` by `{track_by_artist[1]}` to the queue."
-            else:
-                queue_msg = f"Added `{track_by_artist}` to {follower.following}'s queue."
+            song = uri_lst[0]
+            song_name = song['name']
+            song_artist = song['artists'][0]['name']
+            song_album = song['album']['name']
+
+            queue_msg = f"Added `{song_name}` by `{song_artist}` from their album `{song_album}` to the queue."
             print("Sending reply: ", queue_msg)
             if not LOCAL:
                 # tell user their song is queued

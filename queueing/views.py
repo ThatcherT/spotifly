@@ -403,7 +403,11 @@ class SMS(CsrfExemptMixin, APIView):
                         return HttpResponse(str(resp))
                     return Response(status=status.HTTP_400_BAD_REQUEST)
             
-            queue_msg = f"Added `{track_by_artist}` to {follower.following}'s queue."
+            # check if var is a list
+            if isinstance(track_by_artist, list):
+                queue_msg = f"Added `{track_by_artist[0]}` by `{track_by_artist[1]}` to the queue."
+            else:
+                queue_msg = f"Added `{track_by_artist}` to {follower.following}'s queue."
             print("Sending reply: ", queue_msg)
             if not LOCAL:
                 # tell user their song is queued

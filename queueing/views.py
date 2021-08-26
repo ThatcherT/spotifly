@@ -275,7 +275,7 @@ class SMS(CsrfExemptMixin, APIView):
             follower.following = following
             follower.save()
             
-            follower_msg = f"You are now following {follower.following}. Add a track to their queue by texting 'queue let it happen by tame impala' or 'queue lose yourself to dance'. You get the idea.""
+            follower_msg = f"You are now following {follower.following}. Add a track to their queue by texting 'queue let it happen by tame impala' or 'queue lose yourself to dance'. You get the idea."
             print("Sending reply: ", follower_msg)
             if not LOCAL:              
                 resp = MessagingResponse()

@@ -17,6 +17,7 @@ urlpatterns = [
     path('get-song/<lid>/', views.get_song, name='get-song'),
     # path('get-url/', views.get_sp_url),
     path('auth/', views.auth),
+    path('send/', views.send.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

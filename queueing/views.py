@@ -171,6 +171,32 @@ def sms_failed(request):
     resp.message("We're sorry, something went wrong on our end.")
     return HttpResponse(str(resp))
 
+class send(APIView):
+    """
+    Send a message to a certain number
+    """
+
+    def post(self, request, format=None):
+        """
+        Send a message to a certain number
+        """
+        # get the number from the request
+        number = request.data.get('number')
+        # get the message from the request
+        message = request.data.get('message')
+        # get the twilio account info from the request
+        ACCOUNT_SID = config('ACCOUNT_SID')
+        AUTH_TOKEN  = config('AUTH_TOKEN')
+        # get the twilio client
+        client = Client(ACCOUNT_SID, AUTH_TOKEN)
+        # send the message
+        client.messages.create(
+            to=number,
+            from_="+14243735305",
+            body=message
+        )
+        return Response(status=status.HTTP_200_OK)
+
 
 class SMS(CsrfExemptMixin, APIView):
     """
@@ -199,60 +225,88 @@ class SMS(CsrfExemptMixin, APIView):
         
         # Get the text message from the request
         message_body = request.data.get('Body')
+        # remove space from end of message
+
+        if message_body[-1] == ' ':
+            message_body = message_body[:-1]
+
         # Get the sender's phone number from the request
         from_number = str(request.data.get('From'))[2:]
-        print(message_body)
-        print(from_number)
+
+        print("MESSAGE: ", message_body)
+        print("FROM: ", from_number)
+
+        # register flow
         if message_body.lower().startswith('register'):
+            register_msg = f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}"
+            print('Sending message: ', register_msg)
             if not LOCAL:
                 resp = MessagingResponse()
-                resp.message(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
+                resp.message(register_msg)
                 return HttpResponse(str(resp))
-            return Response(f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}")
+            return Response(register_msg)
 
+        # follow flow
         elif message_body.lower().startswith('follow'):
             # get user from database
             following = message_body.partition(' ')[-1]
             # get user
-            print(following)
+            print("Trying to follow: ", following)
             try:
                 user = Listener.objects.get(name=following)
+                print('Found user: ', user.name)
             except:
+                err_msg = f"`{following}` doesn't exist. They need to visit http://spotifly.thatcherthornberry.com"
+                print("Error: ", err_msg)
+
                 # send message saying this user doesn't exist
                 if not LOCAL:
                     resp = MessagingResponse()
-                    resp.message("This user doesn't exist. They need to visit http://spotifly.thatcherthornberry.com")
+                    resp.message(err_msg)
                     return HttpResponse(str(resp))
-                return Response("This user doesn't exist. They need to visit http://spotifly.thatcherthornberry.com")
+                return Response(err_msg)
+            # found user, creating/getting follower object
+            
             follower, created = Follower.objects.get_or_create(number=from_number)
+            if created:
+                print("Created follower: ", follower.number)
+            else:
+                print("Found follower: ", follower.number)
             follower.following = following
             follower.save()
             
-
-            if not LOCAL:
+            follower_msg = f"You are now following {follower.following}. Add a track to their queue by texting 'queue let it happen by tame impala' or 'queue lose yourself to dance'. You get the idea.""
+            print("Sending reply: ", follower_msg)
+            if not LOCAL:              
                 resp = MessagingResponse()
-                resp.message(f"You are now following {user.name}. Add a track to their queue by texting 'queue let it happen by tame impala' or 'queue lose yourself to dance'. You get the idea.")
+                resp.message(follower_msg)
                 return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
 
-        elif message_body.lower().startswith('queue'):
-
-            
-            # Get the song that the user has queued
+        # queue flow
+        elif message_body.lower().startswith('queue'):            
+            # get follower object from phone nummber
             follower, created = Follower.objects.get_or_create(number=from_number)
             if not follower.following:
+                not_following_msg = f"It appears you aren't following anybody... Try 'follow thatcher'. Or, ask the person what their username is."
+                print("Sending reply: ", not_following_msg)
                 if not LOCAL:
                     resp = MessagingResponse()
-                    resp.message(f"It appears you aren't following anybody... Try 'follow thatcher'. Or, ask the person what their username is.")
+                    resp.message(not_following_msg)
                     return HttpResponse(str(resp))
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             else:
+                print("Found follower: ", follower.number)
+                print("Looking for listener...")
                 listener = Listener.objects.get(name=follower.following)
-                print(listener.name)
+                print("Found listener: ", listener.name)
+                
                 if not listener.token:
+                    missing_token_msg = f"It appears the person you're following hasn't authenticated their account yet. Tell them to visit http://spotifly.thatcherthornberry.com or, if they've done that, tell them to text register to 424-373-5305."
+                    print("Sending reply: ", missing_token_msg)
                     if not LOCAL:
                         resp = MessagingResponse()
-                        resp.message(f"It appears the person you're following hasn't authenticated their account yet. Tell them to visit http://spotifly.thatcherthornberry.com")
+                        resp.message(missing_token_msg)
                         return HttpResponse(str(resp))
                     return Response(status=status.HTTP_400_BAD_REQUEST)
             track_by_artist = message_body.partition(' ')[-1]
@@ -268,28 +322,32 @@ class SMS(CsrfExemptMixin, APIView):
             # find track and add to queue
             sp = spotipy.Spotify(auth=listener.token)
             try:
-                uri = sp.search(q=q, type='track', market='US')['tracks']['items'][0]['id']
-            except SpotifyException as e:
-                if 'The access token expired' in e.msg:
-                    print('token exp')
-                    # get new token from refresh token
-                    token_info = sp_oauth.refresh_access_token(listener.refresh_token)
-                    # update listener with new token info
-                    listener.token = token_info['access_token']
-                    listener.refresh_token = token_info['refresh_token']
-                    listener.expires_at= token_info['expires_at']
-                    listener.save()
-
-                    # update sp with new token
-                    sp = spotipy.Spotify(auth=listener.token)
-                    results = sp.current_user_playing_track()
-            try:
+                uri_lst = sp.search(q=q, type='track', market='US')['tracks']['items']
+                if len(uri_lst) == 0:
+                    print("No results found for: ", q)
+                    uri_lst = sp.search(q=track_by_artist, type='track', market='US')['tracks']['items']
+                    if len(uri_lst) == 0:
+                        print("No results found for: ", track_by_artist)
+                        uri_lst = sp.search(q=track, type='track', market='US')['tracks']['items']
+                        if len(uri_lst) == 0:
+                            no_results_msg = f"No results found for `{track_by_artist}`. Try again."
+                            print("Sending reply: ", no_results_msg)
+                            if not LOCAL:
+                                resp = MessagingResponse()
+                                resp.message(no_results_msg)
+                                return HttpResponse(str(resp))
+                            return Response(status=status.HTTP_400_BAD_REQUEST)
+                uri = uri_lst[0]['id']
+                
+                # add to queue
                 sp.add_to_queue(uri, device_id=None)
             except SpotifyException as e:
                 if 'The access token expired' in e.msg:
-                    print('token exp')
+                    print(e.msg)
+
                     # get new token from refresh token
                     token_info = sp_oauth.refresh_access_token(listener.refresh_token)
+
                     # update listener with new token info
                     listener.token = token_info['access_token']
                     listener.refresh_token = token_info['refresh_token']
@@ -298,19 +356,59 @@ class SMS(CsrfExemptMixin, APIView):
 
                     # update sp with new token
                     sp = spotipy.Spotify(auth=listener.token)
-                    results = sp.current_user_playing_track()
-                else:
+                    
+                    # try again
+                    try:
+                        uri_lst = sp.search(q=q, type='track', market='US')['tracks']['items']
+                        if len(uri_lst) == 0:
+                            print("No results found for: ", q)
+                            uri_lst = sp.search(q=track_by_artist, type='track', market='US')['tracks']['items']
+                            if len(uri_lst) == 0:
+                                print("No results found for: ", track_by_artist)
+                                uri_lst = sp.search(q=track, type='track', market='US')['tracks']['items']
+                                if len(uri_lst) == 0:
+                                    no_results_msg = f"No results found for `{track_by_artist}`. Try again."
+                                    print("Sending reply: ", no_results_msg)
+                                    if not LOCAL:
+                                        resp = MessagingResponse()
+                                        resp.message(no_results_msg)
+                                        return HttpResponse(str(resp))
+                                    return Response(status=status.HTTP_400_BAD_REQUEST)
+                        uri = uri_lst[0]['id']
+                        
+                        # add to queue
+                        sp.add_to_queue(uri, device_id=None)
+                    except:
+                        # some other error must of occured
+                        unknown_error_msg = f"An unknown error occured. Please try again."
+                        print("Sending reply: ", unknown_error_msg)
+                        if not LOCAL:
+                            resp = MessagingResponse()
+                            resp.message(unknown_error_msg)
+                            return HttpResponse(str(resp))
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                
+                elif 'No active device' in e.msg:
                     if not LOCAL:
                         resp = MessagingResponse()
                         resp.message(f"It appears {follower.following} is not listening to music right now. Give them the AUX.")
                         return HttpResponse(str(resp))
-                    else:
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
-
+                else:
+                    # some other error must of occured
+                    unknown_error_msg = f"An unknown error occured! Please try again."
+                    print("Sending reply: ", unknown_error_msg)
+                    if not LOCAL:
+                        resp = MessagingResponse()
+                        resp.message(unknown_error_msg)
+                        return HttpResponse(str(resp))
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            
+            queue_msg = f"Added `{track_by_artist}` to {follower.following}'s queue."
+            print("Sending reply: ", queue_msg)
             if not LOCAL:
                 # tell user their song is queued
                 resp = MessagingResponse()
-                resp.message(f"We queued {track}.")
+                resp.message(queue_msg)
                 return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
 

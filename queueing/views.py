@@ -422,7 +422,7 @@ class SMS(CsrfExemptMixin, APIView):
             song_artist = song['artists'][0]['name']
             song_album = song['album']['name']
 
-            queue_msg = f"Added `{song_name}` by `{song_artist}` from their album `{song_album}` to the queue."
+            queue_msg = f"Added `{song_name}` by `{song_artist}` from their album `{song_album}` to `{follower.following}'s` queue."
             print("Sending reply: ", queue_msg)
             if not LOCAL:
                 # tell user their song is queued

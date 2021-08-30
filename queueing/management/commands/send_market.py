@@ -19,24 +19,27 @@ class Command(BaseCommand):
         for follower in followers:
             print('Checking', follower.number)
             if follower.number not in [listener.number for listener in listeners]:
-                print(follower.number, 'is not a listener! Sending them a text...')
-                
-                # use twilio api to send message asking them to sign up for spotfily
-                
-                number = follower.number
-                message = "Want to allow others to queue songs to your device? Visit http://spotifly.thatcherthornberry.com"
-                
-                ACCOUNT_SID = config('ACCOUNT_SID')
-                AUTH_TOKEN  = config('AUTH_TOKEN')
-                
-                # get the twilio client
-                client = Client(ACCOUNT_SID, AUTH_TOKEN)
-                
-                # send the message
-                client.messages.create(
-                    to=number,
-                    from_="+14243735305",
-                    body=message
-                )
+                if not follower.promo:
+                    print(follower.number, 'is not a listener! Sending them a text...')
+                    
+                    # use twilio api to send message asking them to sign up for spotfily
+                    
+                    number = follower.number
+                    message = "Want to allow others to queue songs to your device? Visit http://spotifly.thatcherthornberry.com"
+                    
+                    ACCOUNT_SID = config('ACCOUNT_SID')
+                    AUTH_TOKEN  = config('AUTH_TOKEN')
+                    
+                    # get the twilio client
+                    client = Client(ACCOUNT_SID, AUTH_TOKEN)
+                    
+                    # send the message
+                    client.messages.create(
+                        to=number,
+                        from_="+14243735305",
+                        body=message
+                    )
+                else:
+                    print(follower.number, "Already promo'd, skipping")
             else:
                 print('Already registered', follower.number)

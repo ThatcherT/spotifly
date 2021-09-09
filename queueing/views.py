@@ -22,7 +22,7 @@ from braces.views import CsrfExemptMixin
 import os
 from django.core.mail import send_mail
 from music.settings import BASE_DIR
-
+from queueing.utils import queue_50_songs
 #GLOBALS MUAHAHAHAH
 sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
@@ -296,7 +296,45 @@ class SMS(CsrfExemptMixin, APIView):
                 resp.message(follower_msg)
                 return HttpResponse(str(resp))
             return Response(status=status.HTTP_200_OK)
+        
+        # shuffle
+        elif message_body.lower().startswith('shuffle'):
+            # get Listener from database
+            try:
+                listener = Listener.objects.get(number=from_number)
+                print('Found listener: ', listener.name)
+            except:
+                err_msg = "You need to register first. Text `register` to get started."
+                print("Error: ", err_msg)
+                if not LOCAL:
+                    resp = MessagingResponse()
+                    resp.message(err_msg)
+                    return HttpResponse(str(resp))
+                return Response(err_msg)
+            
+            # get spotify saved songs
+            sp = spotipy.Spotify(auth=listener.token)
+            try:
+                # queue 50 songs
+                queue_50_songs(sp, listener)
+            except SpotifyException as e:
+                if 'The access token expired' in e.msg:
+                    print(e.msg)
 
+                    # get new token from refresh token
+                    token_info = sp_oauth.refresh_access_token(listener.refresh_token)
+
+                    # update listener with new token info
+                    listener.token = token_info['access_token']
+                    listener.refresh_token = token_info['refresh_token']
+                    listener.expires_at= token_info['expires_at']
+                    listener.save()
+
+                    # update sp with new token
+                    sp = spotipy.Spotify(auth=listener.token)
+                    
+                    # try again
+                    queue_50_songs(sp, listener)
         # queue flow
         elif message_body.lower().startswith('queue'):            
             # get follower object from phone nummber

@@ -9,6 +9,7 @@ class Listener(models.Model):
     number = models.CharField(max_length=10, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     email = models.EmailField(blank=True, null=True)
+    max_offset = models.IntegerField(default=5000)
         
     def __str__(self):
         return self.name

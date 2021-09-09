@@ -335,6 +335,13 @@ class SMS(CsrfExemptMixin, APIView):
                     
                     # try again
                     queue_50_songs(sp, listener)
+            shuffled_msg = f"We shuffled some songs for you. Enjoy!"
+            print("Sending reply: ", shuffled_msg)
+            if not LOCAL:
+                resp = MessagingResponse()
+                resp.message(shuffled_msg)
+                return HttpResponse(str(resp))
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         # queue flow
         elif message_body.lower().startswith('queue'):            
             # get follower object from phone nummber

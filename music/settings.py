@@ -81,7 +81,7 @@ DATABASES = {
         "NAME": config("POSTGRES_DB"),
         "USER": config("POSTGRES_USER"),
         "PASSWORD": config("POSTGRES_PASSWORD"),
-        "HOST": '',
+        "HOST": 'postgres', # docker container name
         "PORT": "5432"
     }
 }

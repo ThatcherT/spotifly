@@ -108,7 +108,8 @@ def album_mix_message(message_body, from_number):
     try:
         listener = Listener.objects.get(number=from_number)
     except:
-        return need_to_register_message()
+        err_msg = "You need to register first. Text `register` to get started."
+        return reply_msg(err_msg)
 
     albums = message_body.lower()[4:] # remove 'mix' and space
     album_lst = albums.split(' and ')

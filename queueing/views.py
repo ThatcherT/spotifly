@@ -1,8 +1,7 @@
 from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
-from spotipy.exceptions import SpotifyException
-from queueing.models import Listener, Follower
+from queueing.models import Listener
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,8 +15,6 @@ from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
 import os
 from queueing.utils import (
-    get_sp_auth,
-    queue_50_songs,
     new_listener_email,
     register_message,
     follow_message,
@@ -108,16 +105,6 @@ def success(request, lid):
     """
     listener = Listener.objects.get(id=lid)
     return render(request, 'success.html', {'listener': listener})
-
-
-def auth(request):
-    url = sp_oauth.get_authorize_url()
-    return HttpResponse(url)
-
-
-@csrf_exempt
-def get_sp_url():
-    return sp_oauth.get_authorize_url()
 
 
 @api_view(('POST',))

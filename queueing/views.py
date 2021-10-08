@@ -1,28 +1,31 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 from spotipy.exceptions import SpotifyException
 from queueing.models import Listener, Follower
-from queueing.serializers import ListenerSerializer
-from django.utils.decorators import method_decorator
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from twilio.twiml.messaging_response import MessagingResponse
 import spotipy
 from django.urls import reverse
-from django.shortcuts import render, redirect
-from spotipy.oauth2 import SpotifyOAuth
+from django.shortcuts import render
 from twilio.rest import Client
 from decouple import config
 from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
 import os
-from django.core.mail import send_mail
-from music.settings import BASE_DIR
-from queueing.utils import queue_50_songs
+from queueing.utils import (
+    get_sp_auth,
+    queue_50_songs,
+    new_listener_email,
+    register_message,
+    follow_message,
+    album_mix_message,
+    shuffle_message,
+    queue_message,
+    idk_message,
+)
 #GLOBALS MUAHAHAHAH
 sp_oauth = spotipy.oauth2.SpotifyOAuth(
         config('SPOTIPY_CLIENT_ID'),
@@ -40,33 +43,17 @@ def new_listener(request, lid):
         listener.number = request.POST.get('number')
         listener.save()
 
-
-        # send an email to thatcherthornberry saying someone signed up
-        subject = 'New Listener'
-        html_message = '<h1>Someone signed up!</h1>'
-        html_message += '<p>Email: ' + listener.email + '</p>'
-        from_email = config('EMAIL_FROM_USER')
-        to_email = 'thatcherthornberry@gmail.com'
-        send_mail(subject, html_message, from_email, [to_email], html_message=html_message)
-        
-        # send an email to person thanking them, giving them info
-        subject2 = 'Thank you for signing up!'
-        html_message2 = '<h1>Thank you for signing up!</h1>'
-        html_message2 += '<p>I have to manually add you to a database to grant you access to my app. I will email you when you have access.</p>'
-        html_message2 += '<p>After that, you will receive a text with more instructions.</p>'
-        from_email2 = config('EMAIL_FROM_USER')
-        to_email = listener.email
-        send_mail(subject2, html_message2, from_email2, [to_email], html_message=html_message2)
+        new_listener_email(listener.email)
 
         return render(request, 'new_listener.html', {'success': True})
     if not listener.number:
         return render(request, 'new_listener.html', {'listener': listener})
     else:
         return render(request, 'new_listener.html', {'signedup': True})
+
+
 def home(request):
-    # if post, save email to db
-    if request.method == 'POST':
-        print('yoasted')
+    if request.method == 'POST': # if post, save email to db
         email = request.POST.get('email')
         name = email.split('@')[0]
         # save email to db
@@ -95,7 +82,6 @@ def register(request, code):
     Use the client authorization code to get a token to make requests on behalf of the user
     """
     if request.POST:
-        print(request.POST)
         name = request.POST.get('name').lower()
         try:
             listener = Listener.objects.get(number=request.POST['number'])
@@ -117,52 +103,11 @@ def register(request, code):
 
 
 def success(request, lid):
+    """
+    Succesful registration page
+    """
     listener = Listener.objects.get(id=lid)
     return render(request, 'success.html', {'listener': listener})
-
-
-def get_song(request, lid):
-    listener = Listener.objects.get(id=lid)
-    if listener.token:
-        sp = spotipy.Spotify(auth=listener.token)
-        try:
-            q = 'let it happen'
-            results = sp.search(q=q, type='track', market='US')
-            print(results)
-        except SpotifyException as e:
-            if 'The access token expired' in e.msg:
-                print('token exp')
-                # get new token from refresh token
-                token_info = sp_oauth.refresh_access_token(listener.refresh_token)
-                # update listener with new token info
-                listener.token = token_info['access_token']
-                listener.refresh_token = token_info['refresh_token']
-                listener.expires_at= token_info['expires_at']
-                listener.save()
-
-                # update sp with new token
-                sp = spotipy.Spotify(auth=listener.token)
-                q = 'let it happen'
-                results = sp.search(q=q, type='track', market='US')
-                print(results)
-        
-        # get song info
-        song = results['tracks']['items'][0]
-        song_id = song['id']
-        song_name = song['name']
-        song_artist = song['artists'][0]['name']
-        song_album = song['album']['name']
-        song_uri = song['uri']
-
-
-
-        if results:
-            track = results
-            return render(request, 'song.html', {'track': results})
-        else:
-            return render(request, 'song.html', {'track': None})
-    else:
-        return render(request, 'song.html', {'track': None})
 
 
 def auth(request):
@@ -187,9 +132,8 @@ def sms_failed(request):
 
 class send(APIView):
     """
-    Send a message to a certain number
+    Send a message to a certain number, this is a utility function
     """
-
     def post(self, request, format=None):
         """
         Send a message to a certain number
@@ -214,7 +158,7 @@ class send(APIView):
 
 class SMS(CsrfExemptMixin, APIView):
     """
-    All Texts are Routed Here. Then, we'll send a message to the other relevant api functions.
+    All Texts are Routed Here. Then, we'll send messages to the other relevant api functions.
 
     We'll get the response from those functions.
 
@@ -230,258 +174,36 @@ class SMS(CsrfExemptMixin, APIView):
     def post(self, request, format=None):
         # Get the account_sid from the config file
         LOCAL=config('LOCAL', default=False)
-
-        ACCOUNT_SID = config('ACCOUNT_SID')
-        AUTH_TOKEN  = config('AUTH_TOKEN')
-
-        client = Client(ACCOUNT_SID, AUTH_TOKEN)
-
         
-        # Get the text message from the request
-        message_body = request.data.get('Body')
-        # remove space from end of message
-
+        message_body = request.data.get('Body').lower()
         if message_body[-1] == ' ':
             message_body = message_body[:-1]
 
         # Get the sender's phone number from the request
-        from_number = str(request.data.get('From'))[2:]
+        from_number = str(request.data.get('From'))[2:] # skip the +1
 
-        print("MESSAGE: ", message_body)
-        print("FROM: ", from_number)
 
         # register flow
-        if message_body.lower().startswith('register'):
-            register_msg = f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}"
-            print('Sending message: ', register_msg)
-            if not LOCAL:
-                resp = MessagingResponse()
-                resp.message(register_msg)
-                return HttpResponse(str(resp))
-            return Response(register_msg)
+        if message_body.startswith('register'):
+            return register_message()
 
         # follow flow
-        elif message_body.lower().startswith('follow'):
-            # get user from database
-            following = message_body.partition(' ')[-1]
-            # get user
-            print("Trying to follow: ", following)
-            try:
-                user = Listener.objects.get(name=following)
-                print('Found user: ', user.name)
-            except:
-                err_msg = f"`{following}` doesn't exist. They need to visit http://spotifly.thatcherthornberry.com"
-                print("Error: ", err_msg)
+        elif message_body.startswith('follow'):
+            return follow_message(message_body, from_number)
+            
+        # mix album
+        elif message_body.startswith('mix'):
+            return album_mix_message(message_body, from_number)
 
-                # send message saying this user doesn't exist
-                if not LOCAL:
-                    resp = MessagingResponse()
-                    resp.message(err_msg)
-                    return HttpResponse(str(resp))
-                return Response(err_msg)
-            # found user, creating/getting follower object
-            
-            follower, created = Follower.objects.get_or_create(number=from_number)
-            if created:
-                print("Created follower: ", follower.number)
-            else:
-                print("Found follower: ", follower.number)
-            follower.following = following
-            follower.save()
-            
-            follower_msg = f"You are now following {follower.following}. Add a track to their queue by texting 'queue let it happen by tame impala' or 'queue lose yourself to dance'. You get the idea."
-            print("Sending reply: ", follower_msg)
-            if not LOCAL:              
-                resp = MessagingResponse()
-                resp.message(follower_msg)
-                return HttpResponse(str(resp))
-            return Response(status=status.HTTP_200_OK)
-        
         # shuffle
         elif message_body.lower().startswith('shuffle'):
-            # get Listener from database
-            try:
-                listener = Listener.objects.get(number=from_number)
-                print('Found listener: ', listener.name)
-            except:
-                err_msg = "You need to register first. Text `register` to get started."
-                print("Error: ", err_msg)
-                if not LOCAL:
-                    resp = MessagingResponse()
-                    resp.message(err_msg)
-                    return HttpResponse(str(resp))
-                return Response(err_msg)
-            
-            # get spotify saved songs
-            sp = spotipy.Spotify(auth=listener.token)
-            try:
-                # queue 50 songs
-                queue_50_songs(sp, listener)
-            except SpotifyException as e:
-                if 'The access token expired' in e.msg:
-                    print(e.msg)
+            return shuffle_message(from_number)
 
-                    # get new token from refresh token
-                    token_info = sp_oauth.refresh_access_token(listener.refresh_token)
-
-                    # update listener with new token info
-                    listener.token = token_info['access_token']
-                    listener.refresh_token = token_info['refresh_token']
-                    listener.expires_at= token_info['expires_at']
-                    listener.save()
-
-                    # update sp with new token
-                    sp = spotipy.Spotify(auth=listener.token)
-                    
-                    # try again
-                    queue_50_songs(sp, listener)
-            shuffled_msg = f"We shuffled some songs for you. Enjoy!"
-            print("Sending reply: ", shuffled_msg)
-            if not LOCAL:
-                resp = MessagingResponse()
-                resp.message(shuffled_msg)
-                return HttpResponse(str(resp))
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         # queue flow
-        elif message_body.lower().startswith('queue'):            
-            # get follower object from phone nummber
-            follower, created = Follower.objects.get_or_create(number=from_number)
-            if not follower.following:
-                not_following_msg = f"It appears you aren't following anybody... Try 'follow thatcher'. Or, ask the person what their username is."
-                print("Sending reply: ", not_following_msg)
-                if not LOCAL:
-                    resp = MessagingResponse()
-                    resp.message(not_following_msg)
-                    return HttpResponse(str(resp))
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            else:
-                print("Found follower: ", follower.number)
-                print("Looking for listener...")
-                listener = Listener.objects.get(name=follower.following)
-                print("Found listener: ", listener.name)
-                
-                if not listener.token:
-                    missing_token_msg = f"It appears the person you're following hasn't authenticated their account yet. Tell them to visit http://spotifly.thatcherthornberry.com or, if they've done that, tell them to text register to 424-373-5305."
-                    print("Sending reply: ", missing_token_msg)
-                    if not LOCAL:
-                        resp = MessagingResponse()
-                        resp.message(missing_token_msg)
-                        return HttpResponse(str(resp))
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
-            track_by_artist = message_body.partition(' ')[-1]
-            if 'by' in track_by_artist:
-                track_by_artist = track_by_artist.split(' by ')
-                track = track_by_artist[0]
-                artist = track_by_artist[1]
-                q = 'artist:' + artist + ' track:' + track
-            else:
-                track = track_by_artist
-                q = 'track:' + track
+        elif message_body.lower().startswith('queue'):
+            return queue_message(message_body, from_number)
             
-            # find track and add to queue
-            sp = spotipy.Spotify(auth=listener.token)
-            try:
-                uri_lst = sp.search(q=q, type='track', market='US')['tracks']['items']
-                if len(uri_lst) == 0:
-                    print("No results found for: ", q)
-                    uri_lst = sp.search(q=track_by_artist, type='track', market='US')['tracks']['items']
-                    if len(uri_lst) == 0:
-                        print("No results found for: ", track_by_artist)
-                        uri_lst = sp.search(q=track, type='track', market='US')['tracks']['items']
-                        if len(uri_lst) == 0:
-                            no_results_msg = f"No results found for `{track_by_artist}`. Try again."
-                            print("Sending reply: ", no_results_msg)
-                            if not LOCAL:
-                                resp = MessagingResponse()
-                                resp.message(no_results_msg)
-                                return HttpResponse(str(resp))
-                            return Response(status=status.HTTP_400_BAD_REQUEST)
-                uri = uri_lst[0]['id']
-                
-                # add to queue
-                sp.add_to_queue(uri, device_id=None)
-            except SpotifyException as e:
-                if 'The access token expired' in e.msg:
-                    print(e.msg)
-
-                    # get new token from refresh token
-                    token_info = sp_oauth.refresh_access_token(listener.refresh_token)
-
-                    # update listener with new token info
-                    listener.token = token_info['access_token']
-                    listener.refresh_token = token_info['refresh_token']
-                    listener.expires_at= token_info['expires_at']
-                    listener.save()
-
-                    # update sp with new token
-                    sp = spotipy.Spotify(auth=listener.token)
-                    
-                    # try again
-                    try:
-                        uri_lst = sp.search(q=q, type='track', market='US')['tracks']['items']
-                        if len(uri_lst) == 0:
-                            print("No results found for: ", q)
-                            uri_lst = sp.search(q=track_by_artist, type='track', market='US')['tracks']['items']
-                            if len(uri_lst) == 0:
-                                print("No results found for: ", track_by_artist)
-                                uri_lst = sp.search(q=track, type='track', market='US')['tracks']['items']
-                                if len(uri_lst) == 0:
-                                    no_results_msg = f"No results found for `{track_by_artist}`. Try again."
-                                    print("Sending reply: ", no_results_msg)
-                                    if not LOCAL:
-                                        resp = MessagingResponse()
-                                        resp.message(no_results_msg)
-                                        return HttpResponse(str(resp))
-                                    return Response(status=status.HTTP_400_BAD_REQUEST)
-                        uri = uri_lst[0]['id']
-                        
-                        # add to queue
-                        sp.add_to_queue(uri, device_id=None)
-                    except:
-                        # some other error must of occured
-                        unknown_error_msg = f"An unknown error occured. Please try again."
-                        print("Sending reply: ", unknown_error_msg)
-                        if not LOCAL:
-                            resp = MessagingResponse()
-                            resp.message(unknown_error_msg)
-                            return HttpResponse(str(resp))
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
-                
-                elif 'No active device' in e.msg:
-                    if not LOCAL:
-                        resp = MessagingResponse()
-                        resp.message(f"It appears {follower.following} is not listening to music right now. Give them the AUX.")
-                        return HttpResponse(str(resp))
-                else:
-                    # some other error must of occured
-                    unknown_error_msg = f"An unknown error occured! Please try again."
-                    print("Sending reply: ", unknown_error_msg)
-                    if not LOCAL:
-                        resp = MessagingResponse()
-                        resp.message(unknown_error_msg)
-                        return HttpResponse(str(resp))
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
-            
-            song = uri_lst[0]
-            song_name = song['name']
-            song_artist = song['artists'][0]['name']
-            song_album = song['album']['name']
-
-            queue_msg = f"Added `{song_name}` by `{song_artist}` from their album `{song_album}` to `{follower.following}'s` queue."
-            print("Sending reply: ", queue_msg)
-            if not LOCAL:
-                # tell user their song is queued
-                resp = MessagingResponse()
-                resp.message(queue_msg)
-                return HttpResponse(str(resp))
-            return Response(status=status.HTTP_200_OK)
-
         else:
-            if not LOCAL:
-                # tell user their song is queued
-                resp = MessagingResponse()
-                resp.message("Sorry. I didn't understand that. The commands are register, follow, and queue.")
-                return HttpResponse(str(resp))
-            return Response("Sorry. I didn't understand that. The commands are register, follow, and queue.")
+            return idk_message()
 
 

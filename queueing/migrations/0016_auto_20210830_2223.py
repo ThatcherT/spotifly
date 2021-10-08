@@ -6,23 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0015_rename_expires_in_listener_expires_at'),
+        ("queueing", "0015_rename_expires_in_listener_expires_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='follower',
-            name='promo',
+            model_name="follower",
+            name="promo",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='follower',
-            name='id',
-            field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="follower",
+            name="id",
+            field=models.AutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AlterField(
-            model_name='listener',
-            name='id',
-            field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="listener",
+            name="id",
+            field=models.AutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
     ]

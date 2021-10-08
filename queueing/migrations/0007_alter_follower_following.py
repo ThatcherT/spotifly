@@ -6,14 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0006_auto_20210728_0348'),
+        ("queueing", "0006_auto_20210728_0348"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='follower',
-            name='following',
-            field=models.CharField(default='thatcher', max_length=100),
+            model_name="follower",
+            name="following",
+            field=models.CharField(default="thatcher", max_length=100),
             preserve_default=False,
         ),
     ]

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0016_auto_20210830_2223'),
+        ("queueing", "0016_auto_20210830_2223"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='listener',
-            name='max_offset',
+            model_name="listener",
+            name="max_offset",
             field=models.IntegerField(default=5000),
         ),
     ]

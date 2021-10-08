@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0010_alter_listener_token'),
+        ("queueing", "0010_alter_listener_token"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='listener',
-            name='token',
+            model_name="listener",
+            name="token",
             field=models.TextField(blank=True, null=True),
         ),
     ]

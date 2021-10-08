@@ -13,11 +13,17 @@ from spotipy.exceptions import SpotifyException
 
 # GLOBALS MIGHT BE A BAD IDEA
 sp_oauth = spotipy.oauth2.SpotifyOAuth(
-        config('SPOTIPY_CLIENT_ID'),
-        config('SPOTIPY_CLIENT_SECRET'),
-        config('SPOTIPY_REDIRECT_URI'),
-        scope=['user-library-read', 'user-read-playback-state', 'user-modify-playback-state', 'user-read-currently-playing', 'user-read-recently-played'],
-        )
+    config("SPOTIPY_CLIENT_ID"),
+    config("SPOTIPY_CLIENT_SECRET"),
+    config("SPOTIPY_REDIRECT_URI"),
+    scope=[
+        "user-library-read",
+        "user-read-playback-state",
+        "user-modify-playback-state",
+        "user-read-currently-playing",
+        "user-read-recently-played",
+    ],
+)
 
 
 def queue_50_songs(sp, listener):
@@ -25,9 +31,11 @@ def queue_50_songs(sp, listener):
         # init empty list to queue next song
         song = []
         while song == []:
-            random_offset = random.randint(0, listener.max_offset) # get a random song between 0 and current known max offset
+            random_offset = random.randint(
+                0, listener.max_offset
+            )  # get a random song between 0 and current known max offset
             results = sp.current_user_saved_tracks(limit=1, offset=random_offset)
-            song = list(results['items'])
+            song = list(results["items"])
             if song == []:
                 # max_offset is too high rebase it at one under current random offset
                 listener.max_offset = random_offset - 1
@@ -36,27 +44,32 @@ def queue_50_songs(sp, listener):
                 # iterate through lst
                 for item in song:
                     # get uri of songs
-                    uri = item['track']['uri']
+                    uri = item["track"]["uri"]
                     # queue each song
                     sp.add_to_queue(uri, device_id=None)
 
+
 def new_listener_email(listener_email):
     # send email to thatcher, notifying him that somebody signed up
-    subject = 'New Listener'
-    html_message = '<h1>Someone signed up!</h1>'
-    html_message += '<p>Email: ' + listener_email + '</p>'
-    from_email = config('EMAIL_FROM_USER')
-    to_email = 'thatcherthornberry@gmail.com'
+    subject = "New Listener"
+    html_message = "<h1>Someone signed up!</h1>"
+    html_message += "<p>Email: " + listener_email + "</p>"
+    from_email = config("EMAIL_FROM_USER")
+    to_email = "thatcherthornberry@gmail.com"
     send_mail(subject, html_message, from_email, [to_email], html_message=html_message)
 
     # send an email to person thanking them, giving them info
-    subject2 = 'Thank you for signing up!'
-    html_message2 = '<h1>Thank you for signing up!</h1>'
-    html_message2 += '<p>I have to manually add you to a database to grant you access to my app. I will email you when you have access.</p>'
-    html_message2 += '<p>After that, you will receive a text with more instructions.</p>'
-    from_email2 = config('EMAIL_FROM_USER')
+    subject2 = "Thank you for signing up!"
+    html_message2 = "<h1>Thank you for signing up!</h1>"
+    html_message2 += "<p>I have to manually add you to a database to grant you access to my app. I will email you when you have access.</p>"
+    html_message2 += (
+        "<p>After that, you will receive a text with more instructions.</p>"
+    )
+    from_email2 = config("EMAIL_FROM_USER")
     to_email = listener_email
-    send_mail(subject2, html_message2, from_email2, [to_email], html_message=html_message2)
+    send_mail(
+        subject2, html_message2, from_email2, [to_email], html_message=html_message2
+    )
 
 
 def get_sp_auth(listener):
@@ -65,24 +78,27 @@ def get_sp_auth(listener):
         sp.me()
 
     except SpotifyException as e:
-        if 'The access token expired' in e.msg:
+        if "The access token expired" in e.msg:
             # get new token from refresh token
             token_info = sp_oauth.refresh_access_token(listener.refresh_token)
             # update listener with new token info
-            listener.token = token_info['access_token']
-            listener.refresh_token = token_info['refresh_token']
-            listener.expires_at= token_info['expires_at']
+            listener.token = token_info["access_token"]
+            listener.refresh_token = token_info["refresh_token"]
+            listener.expires_at = token_info["expires_at"]
             listener.save()
     return sp
 
+
 def register_message():
-    register_msg = f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}"
+    register_msg = (
+        f"Please visit this link to authenticate: {sp_oauth.get_authorize_url()}"
+    )
     return reply_msg(register_msg)
 
 
 def follow_message(message_body, from_number):
     # get user from database
-    following = message_body.partition(' ')[-1]
+    following = message_body.partition(" ")[-1]
     # get user
     print("Trying to follow: ", following)
     try:
@@ -93,14 +109,15 @@ def follow_message(message_body, from_number):
         return reply_msg(err_msg)
 
     # found user, creating/getting follower object
-    
+
     follower, _ = Follower.objects.get_or_create(number=from_number)
 
     follower.following = following
     follower.save()
-    
+
     follower_msg = f"You are now following {follower.following}. Add a track to their queue by texting 'queue let it happen by tame impala' or 'queue lose yourself to dance'. You get the idea."
     return reply_msg(follower_msg)
+
 
 def album_mix_message(message_body, from_number):
     # TODO: finish this function and return message
@@ -111,24 +128,22 @@ def album_mix_message(message_body, from_number):
         err_msg = "You need to register first. Text `register` to get started."
         return reply_msg(err_msg)
 
-    albums = message_body.lower()[4:] # remove 'mix' and space
-    album_lst = albums.split(' and ')
+    albums = message_body.lower()[4:]  # remove 'mix' and space
+    album_lst = albums.split(" and ")
 
     for album in album_lst:
         try:
             # get album from spotify api
             sp = get_sp_auth(listener)
-            results = sp.search(q=album, type='album', market='US')
-            album_id = results['albums']['items'][0]['id']
+            results = sp.search(q=album, type="album", market="US")
+            album_id = results["albums"]["items"][0]["id"]
 
             # get list of songs from album
             album_tracks = sp.album_tracks(album_id)
-            album_tracks = album_tracks['items']
+            album_tracks = album_tracks["items"]
         except:
             err_msg = f"`{album}` doesn't exist. They need to visit http://spotifly.thatcherthornberry.com"
             print("Error: ", err_msg)
-
-
 
 
 def shuffle_message(from_number):
@@ -138,7 +153,7 @@ def shuffle_message(from_number):
     except:
         err_msg = "You need to register first. Text `register` to get started."
         return reply_msg(err_msg)
-    
+
     sp = get_sp_auth(listener.token)
 
     queue_50_songs(sp, listener)
@@ -159,40 +174,41 @@ def queue_message(message_body, from_number):
         if not listener.token:
             missing_token_msg = f"It appears the person you're following hasn't authenticated their account yet. Tell them to visit http://spotifly.thatcherthornberry.com or, if they've done that, tell them to text register to 424-373-5305."
             return reply_msg(missing_token_msg)
-    
+
     # find track and add to queue
     sp = get_sp_auth(listener.token)
     uri, uri_lst = get_uri_from_q(message_body, sp)
 
-        
     # add to queue
     try:
         sp.add_to_queue(uri, device_id=None)
     except SpotifyException as e:
-        if 'No active device' in e.msg:
+        if "No active device" in e.msg:
             msg = f"It appears {follower.following} is not listening to music right now. Give them the AUX."
             return reply_msg(msg)
         else:
             # some other error must of occured
             unknown_error_msg = f"An unknown error occured! Please try again."
             return reply_msg(unknown_error_msg)
-    
+
     song = uri_lst[0]
-    song_name = song['name']
-    song_artist = song['artists'][0]['name']
-    song_album = song['album']['name']
+    song_name = song["name"]
+    song_artist = song["artists"][0]["name"]
+    song_album = song["album"]["name"]
 
     queue_msg = f"Added `{song_name}` by `{song_artist}` from their album `{song_album}` to `{follower.following}'s` queue."
     return reply_msg(queue_msg)
 
 
 def idk_message():
-    msg = "Sorry. I didn't understand that. The commands are register, follow, and queue."
+    msg = (
+        "Sorry. I didn't understand that. The commands are register, follow, and queue."
+    )
     return reply_msg(msg)
 
 
 def reply_msg(msg):
-    LOCAL=config('LOCAL', default=False)
+    LOCAL = config("LOCAL", default=False)
     if not LOCAL:
         resp = MessagingResponse()
         resp.message(msg)
@@ -201,22 +217,24 @@ def reply_msg(msg):
 
 
 def get_uri_from_q(message_body, sp):
-    track_by_artist = message_body.partition(' ')[-1]
-    if 'by' in track_by_artist:
-        track_by_artist = track_by_artist.split(' by ')
+    track_by_artist = message_body.partition(" ")[-1]
+    if "by" in track_by_artist:
+        track_by_artist = track_by_artist.split(" by ")
         track = track_by_artist[0]
         artist = track_by_artist[1]
-        q = 'artist:' + artist + ' track:' + track
+        q = "artist:" + artist + " track:" + track
     else:
         track = track_by_artist
-        q = 'track:' + track
-    uri_lst = sp.search(q=q, type='track', market='US')['tracks']['items']
+        q = "track:" + track
+    uri_lst = sp.search(q=q, type="track", market="US")["tracks"]["items"]
     if len(uri_lst) == 0:
-        uri_lst = sp.search(q=track_by_artist, type='track', market='US')['tracks']['items']
+        uri_lst = sp.search(q=track_by_artist, type="track", market="US")["tracks"][
+            "items"
+        ]
         if len(uri_lst) == 0:
-            uri_lst = sp.search(q=track, type='track', market='US')['tracks']['items']
+            uri_lst = sp.search(q=track, type="track", market="US")["tracks"]["items"]
             if len(uri_lst) == 0:
                 no_results_msg = f"No results found for `{track_by_artist}`. Try again."
                 return reply_msg(no_results_msg)
-    uri = uri_lst[0]['id']
+    uri = uri_lst[0]["id"]
     return uri, uri_lst

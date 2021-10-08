@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0013_listener_number'),
+        ("queueing", "0013_listener_number"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='listener',
-            name='expires_in',
+            model_name="listener",
+            name="expires_in",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='listener',
-            name='refresh_token',
+            model_name="listener",
+            name="refresh_token",
             field=models.TextField(blank=True, null=True),
         ),
     ]

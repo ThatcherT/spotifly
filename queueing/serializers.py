@@ -6,4 +6,4 @@ from queueing.models import Listener
 class ListenerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listener
-        fields = ['id', 'name', 'code', 'number']
+        fields = ["id", "name", "code", "number"]

@@ -6,33 +6,33 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0007_alter_follower_following'),
+        ("queueing", "0007_alter_follower_following"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='follower',
-            name='following',
+            model_name="follower",
+            name="following",
             field=models.CharField(max_length=50),
         ),
         migrations.AlterField(
-            model_name='follower',
-            name='number',
+            model_name="follower",
+            name="number",
             field=models.CharField(max_length=10, unique=True),
         ),
         migrations.AlterField(
-            model_name='listener',
-            name='name',
+            model_name="listener",
+            name="name",
             field=models.CharField(max_length=50, unique=True),
         ),
         migrations.AlterField(
-            model_name='listener',
-            name='number',
+            model_name="listener",
+            name="number",
             field=models.CharField(max_length=10, unique=True),
         ),
         migrations.AlterField(
-            model_name='listener',
-            name='token',
+            model_name="listener",
+            name="token",
             field=models.CharField(blank=True, max_length=255, null=True, unique=True),
         ),
     ]

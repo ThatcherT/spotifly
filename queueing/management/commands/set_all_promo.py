@@ -6,7 +6,7 @@ from twilio.rest import Client
 
 
 class Command(BaseCommand):
-    help = 'send marketing text'
+    help = "send marketing text"
 
     def handle(self, *args, **options):
         # get all followers

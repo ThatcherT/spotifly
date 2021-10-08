@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0011_alter_listener_token'),
+        ("queueing", "0011_alter_listener_token"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='listener',
-            name='email',
+            model_name="listener",
+            name="email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
         migrations.AlterField(
-            model_name='follower',
-            name='following',
-            field=models.CharField(default='thatcher', max_length=50),
+            model_name="follower",
+            name="following",
+            field=models.CharField(default="thatcher", max_length=50),
         ),
     ]

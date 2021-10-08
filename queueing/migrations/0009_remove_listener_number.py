@@ -6,12 +6,9 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('queueing', '0008_auto_20210728_0425'),
+        ("queueing", "0008_auto_20210728_0425"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='listener',
-            name='number',
-        ),
+        migrations.RemoveField(model_name="listener", name="number",),
     ]

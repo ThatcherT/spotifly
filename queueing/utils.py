@@ -1,4 +1,3 @@
-from _typeshed import StrPath
 import random
 from decouple import config
 from django.core.mail import send_mail

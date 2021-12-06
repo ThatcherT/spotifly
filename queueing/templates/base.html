@@ -1,7 +1,9 @@
 {% load static %}
+{% load pwa %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% progressive_web_app_meta %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <link rel="stylesheet" href="{% static 'queueing/css/style.css' %}" />
     <title>{% block title %}My amazing site{% endblock %}</title>

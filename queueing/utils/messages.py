@@ -1,91 +1,14 @@
-import random
 from decouple import config
-from django.core.mail import send_mail
 from twilio.twiml.messaging_response import MessagingResponse
-import spotipy
 from rest_framework.response import Response
 from django.http import HttpResponse
 from queueing.models import Listener, Follower
 from rest_framework import status
 from spotipy.exceptions import SpotifyException
 
-
-# GLOBALS MIGHT BE A BAD IDEA
-sp_oauth = spotipy.oauth2.SpotifyOAuth(
-    config("SPOTIPY_CLIENT_ID"),
-    config("SPOTIPY_CLIENT_SECRET"),
-    config("SPOTIPY_REDIRECT_URI"),
-    scope=[
-        "user-library-read",
-        "user-read-playback-state",
-        "user-modify-playback-state",
-        "user-read-currently-playing",
-        "user-read-recently-played",
-    ],
-)
-
-
-def queue_50_songs(sp, listener):
-    for _ in range(50):
-        # init empty list to queue next song
-        song = []
-        while song == []:
-            random_offset = random.randint(
-                0, listener.max_offset
-            )  # get a random song between 0 and current known max offset
-            results = sp.current_user_saved_tracks(limit=1, offset=random_offset)
-            song = list(results["items"])
-            if song == []:
-                # max_offset is too high rebase it at one under current random offset
-                listener.max_offset = random_offset - 1
-                listener.save()
-            else:
-                # iterate through lst
-                for item in song:
-                    # get uri of songs
-                    uri = item["track"]["uri"]
-                    # queue each song
-                    sp.add_to_queue(uri, device_id=None)
-
-
-def new_listener_email(listener_email):
-    # send email to thatcher, notifying him that somebody signed up
-    subject = "New Listener"
-    html_message = "<h1>Someone signed up!</h1>"
-    html_message += "<p>Email: " + listener_email + "</p>"
-    from_email = config("EMAIL_FROM_USER")
-    to_email = "thatcherthornberry@gmail.com"
-    send_mail(subject, html_message, from_email, [to_email], html_message=html_message)
-
-    # send an email to person thanking them, giving them info
-    subject2 = "Thank you for signing up!"
-    html_message2 = "<h1>Thank you for signing up!</h1>"
-    html_message2 += "<p>I have to manually add you to a database to grant you access to my app. I will email you when you have access.</p>"
-    html_message2 += (
-        "<p>After that, you will receive a text with more instructions.</p>"
-    )
-    from_email2 = config("EMAIL_FROM_USER")
-    to_email = listener_email
-    send_mail(
-        subject2, html_message2, from_email2, [to_email], html_message=html_message2
-    )
-
-
-def get_sp_auth(listener):
-    sp = spotipy.Spotify(auth=listener.token)
-    try:
-        sp.me()
-
-    except SpotifyException as e:
-        if "The access token expired" in e.msg:
-            # get new token from refresh token
-            token_info = sp_oauth.refresh_access_token(listener.refresh_token)
-            # update listener with new token info
-            listener.token = token_info["access_token"]
-            listener.refresh_token = token_info["refresh_token"]
-            listener.expires_at = token_info["expires_at"]
-            listener.save()
-    return sp
+from queueing.utils.constants import sp_oauth
+from queueing.utils.spotify import get_spotify_client
+from queueing.utils.songs import get_uri_from_q, queue_50_songs
 
 
 def register_message():
@@ -133,7 +56,7 @@ def album_mix_message(message_body, from_number):
     for album in album_lst:
         try:
             # get album from spotify api
-            sp = get_sp_auth(listener)
+            sp = get_spotify_client(listener)
             results = sp.search(q=album, type="album", market="US")
             album_id = results["albums"]["items"][0]["id"]
 
@@ -153,7 +76,7 @@ def shuffle_message(from_number):
         err_msg = "You need to register first. Text `register` to get started."
         return reply_msg(err_msg)
 
-    sp = get_sp_auth(listener.token)
+    sp = get_spotify_client(listener)
 
     queue_50_songs(sp, listener)
 
@@ -175,7 +98,7 @@ def queue_message(message_body, from_number):
             return reply_msg(missing_token_msg)
 
     # find track and add to queue
-    sp = get_sp_auth(listener.token)
+    sp = get_spotify_client(listener)
     uri, uri_lst = get_uri_from_q(message_body, sp)
 
     # add to queue
@@ -215,25 +138,4 @@ def reply_msg(msg):
     return Response(status=status.HTTP_200_OK)
 
 
-def get_uri_from_q(message_body, sp):
-    track_by_artist = message_body.partition(" ")[-1]
-    if "by" in track_by_artist:
-        track_by_artist = track_by_artist.split(" by ")
-        track = track_by_artist[0]
-        artist = track_by_artist[1]
-        q = "artist:" + artist + " track:" + track
-    else:
-        track = track_by_artist
-        q = "track:" + track
-    uri_lst = sp.search(q=q, type="track", market="US")["tracks"]["items"]
-    if len(uri_lst) == 0:
-        uri_lst = sp.search(q=track_by_artist, type="track", market="US")["tracks"][
-            "items"
-        ]
-        if len(uri_lst) == 0:
-            uri_lst = sp.search(q=track, type="track", market="US")["tracks"]["items"]
-            if len(uri_lst) == 0:
-                no_results_msg = f"No results found for `{track_by_artist}`. Try again."
-                return reply_msg(no_results_msg)
-    uri = uri_lst[0]["id"]
-    return uri, uri_lst
+

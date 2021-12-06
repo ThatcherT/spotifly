@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="center">
+    <form method="POST">
+        {% csrf_token %}
+        <br><br><br>
+    DJ:
+    <select name="dj" id="dj" required>
+        <option value="thatcher">Thatcher</option>
+    </select><br><br>
+    {% comment %} text box {% endcomment %}
+    <input type="text" name="song" id="song" placeholder="Song" required/>
+    by
+    <input type="text" name="artist" id="artist" placeholder="Artist (Optional)" />
+    <br><br>
+    <button type="submit" class="button-one" id="queue">Queue</button>
+    <p> {{ queue_message }} </p>
+
+    </form>
+</div>
+{% endblock %}

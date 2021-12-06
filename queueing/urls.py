@@ -11,6 +11,7 @@ urlpatterns = [
     path("register/<code>/", views.register, name="register"),
     path("success/<lid>/", views.success, name="success"),
     path("send/", views.send.as_view()),
+    path("queue/", views.queue, name="queue"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

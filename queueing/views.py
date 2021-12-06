@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from twilio.twiml.messaging_response import MessagingResponse
-import spotipy
 from django.urls import reverse
 from django.shortcuts import render
 from twilio.rest import Client
@@ -14,8 +13,8 @@ from decouple import config
 from rest_framework.decorators import api_view
 from braces.views import CsrfExemptMixin
 import os
-from queueing.utils import (
-    new_listener_email,
+from queueing.utils.email import new_listener_email
+from queueing.utils.messages import (
     register_message,
     follow_message,
     album_mix_message,
@@ -24,19 +23,26 @@ from queueing.utils import (
     idk_message,
 )
 
-# GLOBALS MUAHAHAHAH
-sp_oauth = spotipy.oauth2.SpotifyOAuth(
-    config("SPOTIPY_CLIENT_ID"),
-    config("SPOTIPY_CLIENT_SECRET"),
-    config("SPOTIPY_REDIRECT_URI"),
-    scope=[
-        "user-library-read",
-        "user-read-playback-state",
-        "user-modify-playback-state",
-        "user-read-currently-playing",
-        "user-read-recently-played",
-    ],
-)
+from queueing.utils.constants import sp_oauth
+
+
+def queue(request):
+
+    context = {"listeners": Listener.objects.all()}
+    if request.POST:
+        # get form vars
+        dj = request.POST.get("dj")
+        song = request.POST.get("song").lower()
+        artist = request.POST.get("artist").lower()
+        
+        # get listener
+        listener = Listener.objects.get(name=dj)
+
+        # queue song on listeners device
+        queue_message = listener.queue_song(song, artist)
+        context["queue_message"] = queue_message
+
+    return render(request, "queue.html", context)
 
 
 def new_listener(request, lid):
@@ -172,10 +178,8 @@ class SMS(CsrfExemptMixin, APIView):
     authentication_classes = []
 
     def post(self, request, format=None):
-        # Get the account_sid from the config file
-        LOCAL = config("LOCAL", default=False)
-
         message_body = request.data.get("Body").lower()
+
         if message_body[-1] == " ":
             message_body = message_body[:-1]
 

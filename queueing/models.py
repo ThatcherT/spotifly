@@ -1,4 +1,8 @@
 from django.db import models
+import spotipy
+
+from queueing.utils.spotify import get_spotify_client
+from queueing.utils.songs import get_uri_from_song_artist
 
 
 class Listener(models.Model):
@@ -14,6 +18,31 @@ class Listener(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def queue_song(self, song, artist=None):
+        print('queueQ')
+        # use spotify api to queue song to activate device
+        # get oauth to take care of tokens and refresh
+        sp = get_spotify_client(self)
+
+        # unique identifier for song
+        uri, uri_lst = get_uri_from_song_artist(song, artist, sp)
+
+        # if uri is a string, return it
+        if not uri_lst:
+            print('somethigni is ongwe')
+            return uri
+
+        # queue song
+        sp.add_to_queue(uri, device_id=None)
+
+        song = uri_lst[0]
+        song_name = song["name"]
+        song_artist = song["artists"][0]["name"]
+        success_msg = f"We queued {song_name} by {song_artist} on {self.name}'s device."
+        print(success_msg)
+        return success_msg
+        
 
 
 class Follower(models.Model):

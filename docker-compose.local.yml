@@ -2,37 +2,13 @@ version: "3"
 
 volumes:
   pgdata:
-  static_volume:
+  # static_volume:
 
 services:
   nginx:
-    image: nginx:1.15-alpine
-    ports:
-      - "80:80"
-    depends_on:
-      - spotiflyweb
     volumes:
-      - ./data/nginx:/etc/nginx/conf.d
       - ./staticfiles:/home/app/staticfiles
+      - ./data/nginx-local:/etc/nginx/conf.d
+  certbot:
   postgres:
-    restart: always
-    image: postgres:12.0-alpine
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-    env_file:
-      - .env
   web:
-    restart: always
-    build: .
-    image: thatcherthornberry/spotifly:latest
-    command: gunicorn music.wsgi:application --bind 0.0.0.0:8000
-    expose:
-      - "8000"
-    env_file:
-      - .env
-    depends_on:
-      - postgres
-    volumes:
-      - ./staticfiles:/home/app/staticfiles

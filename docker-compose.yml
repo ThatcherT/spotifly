@@ -11,7 +11,17 @@ services:
     depends_on:
       - web
     volumes:
-      - ./data/nginx:/etc/nginx/conf.d
+      - ./staticfiles:/home/app/staticfiles
+      - ./data/certbot/conf:/etc/letsencrypt # two shared volumes with certbot for validation
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/nginx:/etc/nginx/conf.d # this is how we use custom nginx build
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+
   postgres:
     restart: always
     image: postgres:12.0-alpine
@@ -21,6 +31,7 @@ services:
       - 5432:5432
     env_file:
       - .env
+
   web:
     restart: always
     build: .
@@ -30,3 +41,5 @@ services:
       - "8000"
     env_file:
       - .env
+    depends_on:
+      - postgres

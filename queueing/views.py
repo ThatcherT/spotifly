@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from twilio.twiml.messaging_response import MessagingResponse
 from django.urls import reverse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from twilio.rest import Client
 from decouple import config
 from rest_framework.decorators import api_view
@@ -22,8 +22,50 @@ from queueing.utils.messages import (
     queue_message,
     idk_message,
 )
-
+from queueing.utils.spotify import get_spotify_client
+from queueing.utils.songs import queue_50_songs
 from queueing.utils.constants import sp_oauth
+
+
+def auth(request, listener_name):
+    if request.POST:
+        print('YOASTED')
+        if request.POST['password'] == 'pizza891':
+            print('Verified')
+            request.session['verified'] = True
+        # redirect reverse to home page
+        return redirect(reverse("home"))
+    return render(request, "auth.html", {"listener_name": listener_name})
+
+
+def shuffle(request):
+    """
+    Shuffle the queue
+    """
+    dj = request.session["listener"]
+    listener = Listener.objects.get(name=dj)
+    sp = get_spotify_client(listener)
+    queue_50_songs(sp, listener)
+    shuffled_msg = f"We shuffled some songs for you. Enjoy!"
+    return HttpResponse(shuffled_msg)
+        
+
+
+def choose_dj(request):
+    """
+    Choose a dj to play music for. Add DJ to session.
+    """
+    if request.POST:
+        dj = request.POST.get("dj")
+        # try to get listener object with name=dj, if it doesn't exist, render choose_dj page with error message
+        try:
+            listener = Listener.objects.get(name=dj)
+        except Listener.DoesNotExist:
+            return render(request, "choose_dj.html", {"error_message": "We couldn't find that DJ. Text Thatcher if you're confused."})
+        # if listener exists, add listener to session
+        request.session["listener"] = listener.name
+        return HttpResponseRedirect(reverse("home"))
+    return render(request, "choose_dj.html", {"listeners": Listener.objects.all()})
 
 
 def queue(request):
@@ -31,7 +73,7 @@ def queue(request):
     context = {"listeners": Listener.objects.all()}
     if request.POST:
         # get form vars
-        dj = request.POST.get("dj")
+        dj = request.session["listener"]
         song = request.POST.get("song").lower()
         artist = request.POST.get("artist").lower()
         
@@ -63,7 +105,9 @@ def new_listener(request, lid):
         return render(request, "new_listener.html", {"signedup": True})
 
 
-def home(request):
+def home(request, dj=None):
+    if dj:
+        request.session["listener"] = dj
     if request.method == "POST":  # if post, save email to db
         email = request.POST.get("email")
         name = email.split("@")[0]
@@ -77,7 +121,7 @@ def home(request):
     return render(request, "home.html")
 
 
-def redirect(request):
+def sp_redirect(request):
     """
     Use the client authorization code flow to get a token to make requests on behalf of the user
     Store that token and associate it with the listener.

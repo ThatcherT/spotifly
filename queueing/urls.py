@@ -4,14 +4,19 @@ from queueing import views
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("home/", views.home, name="home"),
+    path("home/<dj>/", views.home, name="home"),
     path("new-listener/<lid>/", views.new_listener, name="new-listener"),
     path("sms/", views.SMS.as_view()),
     path("sms-failed/", views.sms_failed),
-    path("redirect/", views.redirect),
+    path("redirect/", views.sp_redirect),
     path("register/<code>/", views.register, name="register"),
     path("success/<lid>/", views.success, name="success"),
     path("send/", views.send.as_view()),
     path("queue/", views.queue, name="queue"),
+    path("choose-dj/", views.choose_dj, name="choose-dj"),
+    path("shuffle/", views.shuffle, name="shuffle"),
+    path('auth/<listener_name>/', views.auth, name='auth'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

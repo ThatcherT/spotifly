@@ -4,10 +4,29 @@
 
 {% block content %}
 <div class="center">
-    <button class="button-one">Sign Up/Log In</button>
+    <a href="/choose-dj"><button class="button-one">
+        {% if not request.session.listener %}
+        Choose a DJ
+        {% else %}
+        Change DJ
+        {% endif %}
+    </button></a>
     <br><br>
-    {% comment %} button link that leads to /queue {% endcomment %}
-    <a href="/queue"><button class="button-one">Queue</button></a>
+    {% if request.session.listener %}
+        <a href="/queue"><button class="button-one">Queue</button></a>
+        <br><br>
+        {% if request.session.verified %}
+        <button id="shuffle" name="shuffle" class="button-one">Shuffle</button>
+        <br><br>
+        {% endif %}
+        <button id="invite" name="invite" class="button-one">Invite</button>
+        <br><br>
+        
+    {% endif %}
+    <input name="invite-link" id="invite-link" type="text" value="https://spotifly.thatcherthornberry.com/home/{{ request.session.listener }}/" hidden>
+    <button class="button-one" name="install-btn", id="install-btn">Install</button>
+    <p id="invite-success" name="invite-success" style="all: initial; display: none; color: white;" hidden> Link Copied to your clipboard!</p>
+    <p id="install-error" name="install-error" style="all: initial; display: none; color: white;" hidden> Something didn't work, do you already have this app installed?</p>
 
 </div>
 {% endblock %}

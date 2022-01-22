@@ -9,13 +9,12 @@ def get_spotify_client(listener):
         # hit api to see if token works
         sp.me()
     except SpotifyException as e:
-        if "The access token expired" in e.msg:
-            # get new token from refresh token
-            token_info = sp_oauth.refresh_access_token(listener.refresh_token)
-            # update listener with new token info
-            listener.token = token_info["access_token"]
-            listener.refresh_token = token_info["refresh_token"]
-            listener.expires_at = token_info["expires_at"]
-            listener.save()
-            
+        # get new token from refresh token
+        token_info = sp_oauth.refresh_access_token(listener.refresh_token)
+        # update listener with new token info
+        listener.token = token_info["access_token"]
+        listener.refresh_token = token_info["refresh_token"]
+        listener.expires_at = token_info["expires_at"]
+        listener.save()
+        sp = spotipy.Spotify(auth=listener.token)
     return sp

@@ -82,7 +82,14 @@
             catch(err) {
                 console.log(err);
                 // show install-error message on html page
-                $("#install-error").show();
+                console.log(navigator.platform, 'Platform')
+                if (['iPhone', 'iPad', 'iPod'].includes(navigator.platform);) {
+                    $("#iphone-error").show();
+                    
+                  }
+                    else {
+                        $("#install-error").show();
+                    }
             }
             
             // Wait for the user to respond to the prompt

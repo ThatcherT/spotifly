@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <link rel="stylesheet" href="{% static 'queueing/css/style.css' %}" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <title>{% block title %}My amazing site{% endblock %}</title>
+    <title>{% block title %}{% endblock %}</title>
 </head>
 
 <body>
@@ -29,76 +29,6 @@
         {% block content %}{% endblock %}
     </div>
 </body>
-<script>
-    $(document).ready(function(){
-        $("#header").hide();
-        $("#content").hide();
-        $("#header").fadeIn(1000);
-        $("#content").fadeIn(1000);
-        $("#shuffle").click(function(){
-            $.ajax({
-                url: "/shuffle/",
-                headers: {'X-CSRFToken': '{{ csrf_token }}'},
-                type: "GET",
-                success: function(data){
-                    console.log(data);
-                }
-            });
-        });
-        $("#invite").click(function(){
-            // copy the link to the clipboard
-            let link = document.getElementById("invite-link").value;
-            // if there are spaces, make url safe
-            if (link.indexOf(" ") > -1) {
-                link = link.replace(/ /g, "%20");
-            }
-            
-            navigator.clipboard.writeText(link).then(function() {
-                console.log('Async: Copying to clipboard was successful!');
-            }, function(err) {
-            console.error('Async: Could not copy text: ', err);
-            });
-            // display a success message on the html page
-            $("#invite-success").show();
-        });
-        // INSTALLATION
-        // Initialize deferredPrompt for use later to show browser install prompt.
-        var deferredPrompt;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later.
-            deferredPrompt = e;
-            // Optionally, send analytics event that PWA install promo was shown.
-            console.log(`'beforeinstallprompt' event was fired.`);
-        });
-        let buttonInstall = document.getElementById('install-btn');
-        buttonInstall.addEventListener('click', async () => {
-            // Show the install prompt
-            try {
-                deferredPrompt.prompt();
-            }
-            catch(err) {
-                console.log(err);
-                // show install-error message on html page
-                console.log(navigator.platform, 'Platform')
-                if (['iPhone', 'iPad', 'iPod'].includes(navigator.platform)) {
-                    $("#iphone-error").show();
-                }
-                else {
-                    $("#install-error").show();
-                }
-            }
-            
-            // Wait for the user to respond to the prompt
-            const { outcome } = await deferredPrompt.userChoice;
-            // Optionally, send analytics event with outcome of user choice
-            console.log(`User response to the install prompt: ${outcome}`);
-            // We've used the prompt, and can't use it again, throw it away
-            deferredPrompt = null;
-        });
-    });
-    
-</script>
+{% block scripts %}
+{% endblock %}
 </html>

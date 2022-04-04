@@ -1,9 +1,32 @@
-body{
+body {
     background-color: black;
     color: white;
+    font-weight: 400;
 }
 
-.container-fluid{
+.main-text {
+    font-size: xx-large;
+    text-align: center;
+    padding-left: 20%;
+    padding-right: 20%;
+    padding-top: 30%;
+}
+
+.get-started {
+    /* absolute */
+    position: absolute;
+    bottom: 10%;
+    text-align: left;
+}
+
+.get-started:hover {
+    cursor: pointer;
+    /* underline */
+    text-decoration: underline;
+
+}
+
+.container-fluid {
     width: 100%;
     padding-left: 0%;
     padding-right: 0%;

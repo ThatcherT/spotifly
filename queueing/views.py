@@ -121,6 +121,11 @@ def home(request, dj=None):
     return render(request, "home.html")
 
 
+def sign_up(request):
+    """
+    Sign up page
+    """
+    return render(request, "sign_up.html")
 def sp_redirect(request):
     """
     Use the client authorization code flow to get a token to make requests on behalf of the user

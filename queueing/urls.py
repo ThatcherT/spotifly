@@ -5,6 +5,7 @@ from queueing import views
 urlpatterns = [
     path("", views.home, name="home"),
     path("home/", views.home, name="home"),
+    path("sign-up/", views.sign_up, name="sign-up"),
     path("home/<dj>/", views.home, name="home"),
     path("sms/", views.SMS.as_view()),
     path("sms-failed/", views.sms_failed),

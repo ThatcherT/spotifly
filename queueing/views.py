@@ -27,17 +27,6 @@ from queueing.utils.songs import queue_50_songs
 from queueing.utils.constants import sp_oauth
 
 
-def auth(request, listener_name):
-    if request.POST:
-        print('YOASTED')
-        if request.POST['password'] == 'pizza891':
-            print('Verified')
-            request.session['verified'] = True
-        # redirect reverse to home page
-        return redirect(reverse("home"))
-    return render(request, "auth.html", {"listener_name": listener_name})
-
-
 def shuffle(request):
     """
     Shuffle the queue
@@ -48,7 +37,6 @@ def shuffle(request):
     queue_50_songs(sp, listener)
     shuffled_msg = f"We shuffled some songs for you. Enjoy!"
     return HttpResponse(shuffled_msg)
-        
 
 
 def choose_dj(request):
@@ -76,7 +64,7 @@ def queue(request):
         dj = request.session["listener"]
         song = request.POST.get("song").lower()
         artist = request.POST.get("artist").lower()
-        
+
         # get listener
         listener = Listener.objects.get(name=dj)
 
@@ -112,7 +100,8 @@ def home(request, dj=None):
         email = request.POST.get("email")
         name = email.split("@")[0]
         # save email to db
-        listener, created = Listener.objects.get_or_create(email=email, name=name)
+        listener, created = Listener.objects.get_or_create(
+            email=email, name=name)
         if created:
             print("created")
             # maybe do something here to strengthen model?
@@ -126,6 +115,8 @@ def sign_up(request):
     Sign up page
     """
     return render(request, "sign_up.html")
+
+
 def sp_redirect(request):
     """
     Use the client authorization code flow to get a token to make requests on behalf of the user

@@ -4,8 +4,6 @@ followingDJ = jQuery.data(document.body, "followingDJ");
 IAmDJ = jQuery.data(document.body, "IAmDJ");
 
 function loadPage() {
-  console.log("loading page!");
-  console.log(jQuery.data(document.body, "followingDJ"));
   if (followingDJ || IAmDJ) {
     const bottomBar = document.getElementById("bottom-bar");
     bottomBar.style.display = "";

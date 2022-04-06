@@ -10,12 +10,12 @@ var djFormHeader = `
 </div>
 <div class="row">
     <div class="col-6">
-        <button id="become-dj" class="btn btn-primary btn-lg">
+        <button id="become-dj" class="btn btn-primary btn-lg" onClick="becomeDJButton()">
             Become a DJ
         </button>
     </div>
     <div class="col-6">
-        <button id="follow-dj" class="btn btn-primary btn-lg">
+        <button id="follow-dj" class="btn btn-primary btn-lg" onClick="followDJButton()">
             Follow a DJ
         </button>
     </div>
@@ -36,35 +36,29 @@ document.getElementById("get-started").addEventListener("click", function () {
     mainContent.classList.add("form-head");
     mainContent.classList.remove("fade-out");
     mainContent.classList.add("fade-in");
-    followingDJButton();
-    becomeDjButton();
-    // TODO: put backt o 1000
-  }, 1);
+  }, 1000);
 });
 
-function followingDJButton() {
-  document.getElementById("follow-dj").addEventListener("click", function () {
+function followDJButton() {
     mainContent.innerHTML =
-      djFormHeader +
-      `
-        <div class="row">
-            <div class="col-12">
-                <form id="follow-dj-form" onSubmit="return followDJ();">
-                    <div class="form-group">
-                        <label for="follow-dj">DJ Name</label>
-                        <input type="text" class="form-control big-ole-form-input" id="follow-dj" required>
-                    </div>
-                    <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit">
-                        Submit
-                    </button>
-                </form>
-            </div>
-        </div>`;
-  });
+    djFormHeader +
+    `
+      <div class="row">
+          <div class="col-12">
+              <form id="follow-dj-form" onSubmit="return followDJ();">
+                  <div class="form-group">
+                      <label for="follow-dj">DJ Name</label>
+                      <input type="text" class="form-control big-ole-form-input" id="follow-dj" required>
+                  </div>
+                  <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit">
+                      Submit
+                  </button>
+              </form>
+          </div>
+      </div>`;
 }
 
-function becomeDjButton() {
-  document.getElementById("become-dj").addEventListener("click", function () {
+function becomeDJButton() {
     $.ajax({
       url: "/spotify/connect-link/",
       type: "GET",
@@ -78,13 +72,8 @@ function becomeDjButton() {
           `
               <div class="row">
                   <div class="col-12">
-                      <h1>Connect with spotify to become a DJ</h1>
-                  </div>
-              </div>
-              <div class="row">
-                  <div class="col-12">
                       <a href="${data.url}">
-                          <button id="connect-with-spotify" class="btn btn-primary btn-lg">
+                          <button id="connect-with-spotify" class="btn btn-primary btn-lg big-ole-btn" style="background-color: green;">
                               Connect with Spotify
                           </button>
                       </a>
@@ -95,5 +84,4 @@ function becomeDjButton() {
         alert(xhr.responseText);
       },
     });
-  });
 }

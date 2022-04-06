@@ -10,24 +10,15 @@ function shuffle() {
     dataType: "json",
     success: function (data) {
       // shuffle success message
-      mainContent.innerHTML += `
-            <div class="row">
-                <div class="col-12">
-                    <h2 style="color: green; font-size: 2em;>Shuffle Success</h2>
-                </div>
-            </div>
-
-        `;
+      document.getElementById("shuffle-message").style.display = "";
+      document.getElementById("shuffle-message").style.color = "green";
+      document.getElementById("shuffle-message").innerHTML = "Shuffled!";
     },
     error: function (xhr, status, error) {
       // shuffle error message
-      mainContent.innerHTML += `
-            <div class="row">
-                <div class="col-12">
-                    <h2 style="color: red; font-size: 2em;>Shuffle Error</h2>
-                </div>
-            </div>
-            `;
+      document.getElementById("shuffle-message").style.display = "";
+      document.getElementById("shuffle-message").style.color = "red";
+      document.getElementById("shuffle-message").innerHTML = "Some error.. sorry";
     },
   });
 }

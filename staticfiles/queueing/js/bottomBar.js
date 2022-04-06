@@ -67,6 +67,13 @@ function loadProfilePage() {
                     </p>
                     <button class="btn btn-primary big-ole-btn" onclick="shuffle()">Shuffle</button>
                 </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <p id="shuffle-message" style="padding-top: 10%; display: none;">
+                        Shuffle Message
+                    </p>
+                </div>
             </div>`;
   } else {
     $.ajax({

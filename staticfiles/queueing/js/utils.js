@@ -1,3 +1,29 @@
+/*
+This document contains some helpful utils for shuffling, following, and queueing, loadpage, other.
+*/
+
+followingDJ = jQuery.data(document.body, "followingDJ")
+IAmDJ = jQuery.data(document.body, "IAmDJ")
+console.log(IAMDJ, followingDJ);
+// STARTUP SCRIPT RUNS EVERY TIME!!!!!
+loadPage();
+
+function loadPage() {
+  // check if any DJ relations exist
+  if ( followingDJ || IAmDJ) {
+    const bottomBar = document.getElementById("bottom-bar");
+    bottomBar.style.display = "";
+    if (IAmDJ) {
+      loadProfilePage();
+    } else {
+      loadDJPage();
+    }
+  } else {
+    loadWelcomePage();
+  }
+}
+
+
 // send ajax to server and shuffle for IAmDJ
 function shuffle() {
   $.ajax({
@@ -36,10 +62,6 @@ function followDJ() {
     dataType: "json",
     success: function (data) {
       // update jQuery data
-      console.log("success!");
-      jQuery.data(document.body, "followingDJ", followingDJ);
-      console.log("loading page");
-      console.log(jQuery.data(document.body, "followingDJ"));
       loadPage();
 
       return true;
@@ -51,3 +73,30 @@ function followDJ() {
     },
   });
 }
+
+// send an ajax request with local storage data and data from an input element
+function queue() {
+  // get dj from session
+  const song = document.getElementById("queue-song-input").value;
+  $.ajax({
+    url: "/ajax/queue/",
+    type: "POST",
+    data: {
+      csrfmiddlewaretoken: window.CSRF_TOKEN,
+      song: song,
+      dj: followingDJ,
+    },
+    success: function (data) {
+      return data.msg;
+    }
+  });
+}
+
+// handy util for updating the active icon
+function updateActiveIcon(icon) {
+  document.querySelectorAll(".bottom-bar .nav-icon").forEach(function (icon) {
+    icon.classList.remove("active");
+  });
+  icon.classList.add("active");
+}
+

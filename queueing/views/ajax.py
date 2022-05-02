@@ -11,6 +11,7 @@ def follow_dj(request):
     Listener.objects.get(name=followingDJ)
     # save to session
     request.session["followingDJ"] = followingDJ
+    request.session.set_expiry(60*60*24*365*10) # expire in ten year
     return JsonResponse({'success': True})
 
 

@@ -55,7 +55,7 @@ function followDJButton() {
         djFormHeader +
         `<div class="row">
                 <div class="col-12">
-                    <select id="dj-select" class="selectpicker form-select-lg" data-live-search="true">
+                <select id="dj-select" class="selectpicker" data-style="btn-lg big-ole-btn" data-size="10" data-live-search="true">
                         <option selected disabled>Select a DJ</option>
                         ${djObj.djs.map(dj => `<option value="${dj}">${dj}</option>`).join("")}
                     </select>
@@ -66,6 +66,11 @@ function followDJButton() {
                     <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit big-ole-btn" onClick="followDJ()">
                         Submit
                     </button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <p id="follow-dj-error" class="error-message"></p>
                 </div>
             </div>`;
     $('#dj-select').selectpicker().selectpicker('refresh');

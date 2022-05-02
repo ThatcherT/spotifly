@@ -3,6 +3,15 @@ from queueing.models import Listener
 from queueing.utils.spotify import get_spotify_client
 from queueing.utils.songs import get_uri_from_q, get_uri_from_song_name
 
+
+def unfollow_dj(request):
+    """
+    Unfollow a dj
+    """
+    request.session.pop("followingDJ")
+    return JsonResponse({'success': True})
+
+
 def follow_dj(request):
     """
     Follow a dj
@@ -12,7 +21,7 @@ def follow_dj(request):
     # save to session
     request.session["followingDJ"] = followingDJ
     request.session.set_expiry(60*60*24*365*10) # expire in ten year
-    return JsonResponse({'success': True})
+    return JsonResponse({'followingDJ': followingDJ})
 
 
 def shuffle(request):
@@ -30,7 +39,6 @@ def queue(request):
     """
     song = request.POST.get("song")
     dj = request.POST.get("dj")
-    print('dj = ', dj)
     
     listener = Listener.objects.get(name=dj)
 

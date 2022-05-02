@@ -17,7 +17,6 @@ function loadWelcomePage() {
     // when click get-started button, show the dj form
     document.getElementById("get-started").addEventListener("click", function () {
         mainContent.classList.add("dj-form");
-
         mainContent.innerHTML = djFormHeader;
         document.getElementById("get-started").style.display = "none";
         mainContent.classList.remove("main-text");
@@ -54,20 +53,22 @@ var djFormHeader = `
 function followDJButton() {
     mainContent.innerHTML =
         djFormHeader +
-        `
+        `<div class="row">
+                <div class="col-12">
+                    <select id="dj-select" class="selectpicker form-select-lg" data-live-search="true">
+                        <option selected disabled>Select a DJ</option>
+                        ${djObj.djs.map(dj => `<option value="${dj}">${dj}</option>`).join("")}
+                    </select>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
-                    <form id="follow-dj-form" onSubmit="return followDJ();">
-                        <div class="form-group">
-                            <label for="follow-dj">DJ Name</label>
-                            <input type="text" class="form-control big-ole-form-input" id="follow-dj" required>
-                        </div>
-                        <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit">
-                            Submit
-                        </button>
-                    </form>
+                    <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit big-ole-btn" onClick="followDJ()">
+                        Submit
+                    </button>
                 </div>
             </div>`;
+    $('#dj-select').selectpicker().selectpicker('refresh');
 }
 
 // shows the form to become a dj

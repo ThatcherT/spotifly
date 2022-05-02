@@ -45,7 +45,7 @@ async function loadDJPage() {
             </div>
             <div class="row">
                 <div class="col-12">
-                    <select id="dj-select" class="selectpicker dj-select" data-live-search="true">
+                    <select id="dj-select" class="selectpicker" data-style="btn-lg big-ole-btn" data-live-search="true">
                         <option selected disabled>Select a DJ</option>
                         ${djObj.djs.map(dj => `<option value="${dj}">${dj}</option>`).join("")}
                     </select>
@@ -53,12 +53,11 @@ async function loadDJPage() {
             </div>
             <div class="row">
                 <div class="col-12">
-                    <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit big-ole-btn">
+                    <button id="follow-dj-btn" class="btn btn-primary btn-lg form-submit big-ole-btn" onClick="followDJ()">
                         Submit
                     </button>
                 </div>
             </div>`;
-        console.log('refreshing :)')
         $('#dj-select').selectpicker().selectpicker('refresh');
     }
 }

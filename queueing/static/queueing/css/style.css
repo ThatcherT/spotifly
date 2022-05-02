@@ -139,6 +139,18 @@ body {
     font-size: 4rem;
 }
 
+.bootstrap-select .big-ole-btn {
+    font-size: 3rem;
+}
+
+.bootstrap-select {
+    width: 100% !important;
+}
+
+.dropdown-menu {
+    font-size: 3rem;
+}
+
 .big-ole-form-input {
     height: 90px;
     margin-top: 10%;

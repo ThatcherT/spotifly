@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "pwa",
     "django_rq",
+    "scheduler",
 ]
 
 MIDDLEWARE = [
@@ -95,7 +96,15 @@ else:
             "PORT": "5432",
         }
     }
-
+RQ_QUEUES = {
+    "default": {
+        "HOST": config("REDIS_HOST"),
+        "PORT": config("REDIS_PORT"),
+        "DB": 0,
+        "PASSWORD": config("REDIS_PASSWORD"),
+        "DEFAULT_TIMEOUT": 360,
+    }
+}
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 

@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "pwa",
     "django_rq",
-    "scheduler",
 ]
 
 MIDDLEWARE = [

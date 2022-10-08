@@ -18,14 +18,5 @@ class Command(BaseCommand):
         }
         obj_str = json.dumps(obj)
         cache.set("Thatcher.Thornberry", obj_str)
-        print(cache.get("Thatcher.Thornberry"))
-
-        # convert str to dict
         obj2 = json.loads(cache.get("Thatcher.Thornberry"))
-        print(obj2["song_uris"])
-        # listener = Listener.objects.get(name="thatcher.thornberry")
-        # sp = sp = listener.sp_client.sp()
-        # playback = sp.current_playback()
 
-        # uri = playback["item"]["uri"]
-        # print(uri)

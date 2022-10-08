@@ -55,11 +55,8 @@ class Listener(models.Model):
     def session_active(self):
         """Check if a session is active"""
         for j in scheduler.get_jobs():
-            print(j, j.id)
             if j.id == self.name:
-                print("Session Active")
                 return True
-        print("Session Inactive")
         return False
 
     def queue_song(self, track_uri):
@@ -69,7 +66,6 @@ class Listener(models.Model):
             sp.add_to_queue(track_uri, device_id=None)
         except SpotifyException as e:
             print(e)
-            print("Some Exception")
 
     def shuffle(self):
         sp = self.sp_client.sp
@@ -81,11 +77,9 @@ class Listener(models.Model):
         # delete existing with id if exists
         for j in scheduler.get_jobs():
             if j.id == self.name:
-                print("Canceling existing session")
                 scheduler.cancel(j)
         # delete existing redis queue
         cache.delete(self.name)
-        print("Deleting existing queue")
         scheduler.schedule(
             scheduled_time=datetime.now(),
             func=self.decide_to_queue,
@@ -93,7 +87,6 @@ class Listener(models.Model):
             repeat=180,  # 3 hours
             id=self.name,
         )
-        print("Session started for ", self.name)
 
     def decide_to_queue(self):
         playback = self.playback  # static copy
@@ -102,7 +95,7 @@ class Listener(models.Model):
             or self.q_mgmt.queue_mgmt["queue"] == {}
         ):
             # song is still playing or queue empty
-            print("Continue...")
+            return
         else:
             # song is done playing
             self.q_mgmt.queue_next()
@@ -119,7 +112,7 @@ class Listener(models.Model):
                 # TODO: handle this
                 print("MISCONFIGURED_ACCOUNT")
                 return None
-            if float(self.listener.expires_at) < datetime.now().timestamp():
+            if float(self.listener.expires_at) > datetime.now().timestamp():
                 print(self.listener.expires_at, datetime.now().timestamp())
                 self.update_token()
                 print("REFRESHING_EXPIRED_TOKEN")
@@ -128,7 +121,6 @@ class Listener(models.Model):
                 self._sp.me()
             except SpotifyException as e:
                 print("there was an error trying to connect with spotify", e)
-                print("requesting a new access_token using the refresh_token")
                 self.update_token()
             return self._sp
 
@@ -173,18 +165,15 @@ class Listener(models.Model):
                     if not value.get('listener_to'):
                         raise ValueError("No listener_to")
                     if not type(value.get('votes')) == int:
-                        print(value.get('votes'))
                         raise ValueError("No votes")
                     if not value.get('queued_time'):
                         raise ValueError("No queued_time")
                     super().update({uri: value})
                     # TODO: this is oviously a consequence of a poorly architected class structure
                     queue_mgmt = json.loads(cache.get(value["listener_to"]))
-                    print('eck ->', queue_mgmt['on_deck'] == '')
                     if queue_mgmt['on_deck'] == '':
                         queue_mgmt['on_deck'] = uri
                         # queue the song
-                        print('queueing! :)')
                         listener = Listener.objects.get(name=value["listener_to"])
                         listener.queue_song(uri)
                     else:
@@ -249,7 +238,6 @@ class Listener(models.Model):
                 "listener_from": "",
                 "listener_to": self.listener.name,
             }
-            print('after queue add', self.queue_mgmt)
 
         def queue_vote(self, track_uri):
             """Vote for a song in the queue"""

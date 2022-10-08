@@ -114,21 +114,21 @@ class Listener(models.Model):
                 return None
             if float(self.listener.expires_at) > datetime.now().timestamp():
                 print(self.listener.expires_at, datetime.now().timestamp())
-                self.update_token()
+                self._update_token()
                 print("REFRESHING_EXPIRED_TOKEN")
             try:
                 # hit api to see if token works
                 self._sp.me()
             except SpotifyException as e:
                 print("there was an error trying to connect with spotify", e)
-                self.update_token()
+                self._update_token()
             return self._sp
 
         @sp.setter
         def sp(self, value):
             self._sp = value
 
-        def update_token(self):
+        def _update_token(self):
             token_info = sp_oauth.refresh_access_token(self.listener.refresh_token)
             # update listener with new token info
             self.listener.token = token_info["access_token"]

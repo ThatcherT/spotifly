@@ -181,19 +181,7 @@ class Listener(models.Model):
                     cache.set(value["listener_to"], json.dumps(queue_mgmt))
 
             def __setitem__(self, key, value):
-                if key == "current":
-                    # must be string
-                    if not isinstance(value, str):
-                        raise TypeError(
-                            "current must be a song_uri string not ", type(value)
-                        )
-                elif key == "on_deck":
-                    # Set the on deck track for a listener and queue song to spotify
-                    if not isinstance(value, str) and not value.startswith("spotify:track:"):
-                        raise TypeError(
-                            "on_deck must be a song_uri string not ", type(value)
-                        )
-                    # queue the song
+                if key == "on_deck":
                     listener = Listener.objects.get(name=self["listener_name"])
                     listener.queue_song(value)
                 # any changes to the queue_mgmt var will be saved to redis

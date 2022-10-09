@@ -88,7 +88,7 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            # todo is this secure or is this swiss cheese?
+            # TODO: is this secure or is this swiss cheese?
             "NAME": config("DB_NAME", default="spotifly", cast=str),
             "USER": config("POSTGRES_USER", default="thatcher", cast=str),
             "PASSWORD": config("POSTGRES_PASSWORD"),

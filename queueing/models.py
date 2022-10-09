@@ -113,8 +113,8 @@ class Listener(models.Model):
                 print("MISCONFIGURED_ACCOUNT")
                 return None
             if float(self.listener.expires_at) < datetime.now().timestamp():
-                self._update_token()
                 print("REFRESHING_EXPIRED_TOKEN")
+                self._update_token()
             try:
                 # hit api to see if token works
                 self._sp.me()

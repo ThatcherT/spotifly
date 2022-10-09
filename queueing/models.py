@@ -112,8 +112,7 @@ class Listener(models.Model):
                 # TODO: handle this
                 print("MISCONFIGURED_ACCOUNT")
                 return None
-            if float(self.listener.expires_at) > datetime.now().timestamp():
-                print(self.listener.expires_at, datetime.now().timestamp())
+            if float(self.listener.expires_at) < datetime.now().timestamp():
                 self._update_token()
                 print("REFRESHING_EXPIRED_TOKEN")
             try:
@@ -121,6 +120,7 @@ class Listener(models.Model):
                 self._sp.me()
             except SpotifyException as e:
                 print("there was an error trying to connect with spotify", e)
+                # TODO: deprecate this
                 self._update_token()
             return self._sp
 
@@ -226,6 +226,7 @@ class Listener(models.Model):
                 "listener_from": "",
                 "listener_to": self.listener.name,
             }
+            print(self.queue_mgmt)
 
         def queue_vote(self, track_uri):
             """Vote for a song in the queue"""

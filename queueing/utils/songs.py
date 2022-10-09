@@ -11,7 +11,6 @@ def get_song_matches(song, sp):
     return song_lst
 
 
-
 # queue 50 random songs
 def queue_50_songs(sp, listener):
     for _ in range(50):

@@ -147,12 +147,17 @@ class Listener(models.Model):
             queue_mgmt_str = cache.get(self.listener.name)
             if not queue_mgmt_str:  # initialize if not
                 # crucial as this will push changes to redis
-                cache.set(self.listener.name, json.dumps({
-                        "listener_name": self.listener.name,
-                        "current": self.listener.playback,
-                        "on_deck": "",
-                        "queue": {},
-                    }))
+                cache.set(
+                    self.listener.name,
+                    json.dumps(
+                        {
+                            "listener_name": self.listener.name,
+                            "current": self.listener.playback,
+                            "on_deck": "",
+                            "queue": {},
+                        }
+                    ),
+                )
 
         # too many subclases... no such thing
         class QueueMgmtObj(dict):
@@ -162,17 +167,17 @@ class Listener(models.Model):
                 def __setitem__(self, uri, value):
                     if not uri.startswith("spotify:track:"):
                         raise ValueError("Not a track uri")
-                    if not value.get('listener_to'):
+                    if not value.get("listener_to"):
                         raise ValueError("No listener_to")
-                    if not type(value.get('votes')) == int:
+                    if not type(value.get("votes")) == int:
                         raise ValueError("No votes")
-                    if not value.get('queued_time'):
+                    if not value.get("queued_time"):
                         raise ValueError("No queued_time")
                     super().update({uri: value})
                     # TODO: this is oviously a consequence of a poorly architected class structure
                     queue_mgmt = json.loads(cache.get(value["listener_to"]))
-                    if queue_mgmt['on_deck'] == '':
-                        queue_mgmt['on_deck'] = uri
+                    if queue_mgmt["on_deck"] == "":
+                        queue_mgmt["on_deck"] = uri
                         # queue the song
                         listener = Listener.objects.get(name=value["listener_to"])
                         listener.queue_song(uri)
@@ -201,13 +206,13 @@ class Listener(models.Model):
 
         def queue_next(self):
             """If the current song is done playing, set the top song from queue to on deck and then queue it"""
-            if self.listener.playback != self.queue_mgmt['on_deck']:
+            if self.listener.playback != self.queue_mgmt["on_deck"]:
                 print("Somebody messed up.. I think the queue will be a bit ahead now")
             # update queue_mgmt
             self.queue_mgmt["current"] = self.listener.playback
             # get song with most votes, if equal votes, get earliest added from self.queue['queued_time]
             self.queue_mgmt["on_deck"] = max(
-                self.queue_mgmt['queue'],
+                self.queue_mgmt["queue"],
                 key=lambda x: (
                     self.queue_mgmt["queue"][x]["votes"],
                     -self.queue_mgmt["queue"][x]["queued_time"],

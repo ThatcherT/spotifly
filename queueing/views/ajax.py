@@ -103,7 +103,6 @@ def queue(request):
         return JsonResponse({"success": True})
 
 
-
 def get_djs(request):
     """
     get the listener objects from the database

@@ -19,4 +19,3 @@ class Command(BaseCommand):
         obj_str = json.dumps(obj)
         cache.set("Thatcher.Thornberry", obj_str)
         obj2 = json.loads(cache.get("Thatcher.Thornberry"))
-

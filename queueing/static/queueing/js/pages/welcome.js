@@ -31,7 +31,7 @@ var djFormHeader = `
     <div class="row">
         <div class="col-12">
             <p>
-                The choice is yours.
+                The choice is yours...
             </p>
         </div>
     </div>

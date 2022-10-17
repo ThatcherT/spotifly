@@ -9,7 +9,7 @@ function loadQueuePage() {
         <div class="row">
             <div class="col-12">
                 <p>
-                    Queue Songs
+                    Queue a Song
                 </p>
             </div>
         </div>

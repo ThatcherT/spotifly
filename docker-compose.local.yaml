@@ -18,6 +18,7 @@ services:
       - .env
     environment:
       - DOCKER_LOCAL=True
+      - SPOTIFY_REDIRECT_URI=http://0.0.0.0:8000/redirect
     depends_on:
       - postgres
   postgres:

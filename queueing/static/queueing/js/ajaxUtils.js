@@ -28,7 +28,7 @@ function queueManagement() {
     dataType: "json",
     success: function (data) {
       // update jQuery data
-      jQuery.data(document.body, "queueMgmt", data);
+      jQuery.data(document.body, "queueMgmt", data); 
       return true;
     },
     error: function (xhr, status, error) {

@@ -19,10 +19,12 @@ async function getDJs() {
 
 // return the HTML for the list of queued songs
 function getQueueHTML() {
-  // TODO: do the queue stuff with ajax queueManagement
   let rowsHTML = "";
   let queue = [];
   // TODO: get queue from redis
+  // use jquery to get "queueMgmt" from document.body
+
+  let queueMgmt = jQuery.data(document.body, "queueMgmt");
   if (queue.length > 0) {
     // TODO: check this... thank you copilot ily
     rowsHTML = queue.map((song) => getSongRowHTML(song)).join("");
@@ -53,6 +55,8 @@ async function getNowPlayingSongHTML() {
 
 // DJ Page
 async function loadDJPage() {
+  // TODO: refactor this to be fast
+  queueManagement();
   updateActiveIcon(document.getElementById("dj-icon"));
   if (getFollowingDJ()) {
     mainContent.innerHTML = `

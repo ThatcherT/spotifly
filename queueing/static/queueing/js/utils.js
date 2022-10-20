@@ -36,14 +36,13 @@ function logOut() {
 
 function getSongRowHTML(songObj) {
   // IMPORTANT: this is the songs unique identifier
-  const URI = songObj.uri;
   let songRowHTML = document.createElement("div");
 
   // TODO: return row from function called songRowHTML
 
   songRowHTML.classList.add("row", "search-item");
-  // add an attribute data-uri to the row
-  songRowHTML.setAttribute("data-uri", URI);
+  // add the stringified songObj to the row
+  songRowHTML.setAttribute('data-song-object', JSON.stringify(songObj));
 
   // album image
   const albumImageCol = document.createElement("div");

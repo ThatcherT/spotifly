@@ -18,16 +18,16 @@ async function getDJs() {
 }
 
 // return the HTML for the list of queued songs
-function getQueueHTML(queueMgmtObj) {
-  let songs = queueMgmtObj.queue;
+function getQueueHTML() {
   let rowsHTML = "";
   // TODO: get queue from redis
   // use jquery to get "queueMgmt" from document.body
 
   let queueMgmt = jQuery.data(document.body, "queueMgmt");
-  if (songs.length > 0) {
-    // TODO: check this... thank you copilot ily
-    rowsHTML = queue.map((song) => getSongRowHTML(song)).join("");
+  if (queueMgmt) {
+    queueMgmt.queue.forEach((songObj) => {
+      rowsHTML += getSongRowHTML(songObj).outerHTML;
+    });
   } else {
     rowsHTML = `<div class="row">
             <div class="col-12">

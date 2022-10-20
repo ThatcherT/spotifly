@@ -206,6 +206,7 @@ class Listener(models.Model):
 
         def queue_next(self):
             """If the current song is done playing, set the top song from queue to on deck and then queue it"""
+            # TODO: pretty sure this broke
             if self.listener.playback != self.queue_mgmt["on_deck"]:
                 print("Somebody messed up.. I think the queue will be a bit ahead now")
             # update queue_mgmt
@@ -221,13 +222,15 @@ class Listener(models.Model):
             # rm from queue
             del self.queue_mgmt["queue"][self.queue_mgmt["on_deck"]]
 
-        def queue_add(self, track_uri):
+        def queue_add(self, song_object):
             """Add track with zero votes"""
             # init song with 0 votes
             # HARD LESSON: the setter doesn't work for sub dicts :')
+            track_uri = song_object["uri"]
             self.queue_mgmt["queue"][track_uri] = {
                 "votes": 0,
                 "queued_time": datetime.now().timestamp(),
+                "song_object": song_object,
                 "listener_from": "",
                 "listener_to": self.listener.name,
             }

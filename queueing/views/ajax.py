@@ -99,12 +99,15 @@ def queue(request):
     """
     Queue song, pass dj parameter and song title
     """
-    uri = request.POST.get("uri")
+    song_object = request.POST.get("songObj")
+    # convert json string to python dict
+    song_object = json.loads(song_object)
+    uri = song_object["uri"]
     dj = request.POST.get("dj")
 
     listener = Listener.objects.get(name=dj)
     if listener.session_active:
-        listener.q_mgmt.queue_add(uri)
+        listener.q_mgmt.queue_add(song_object)
         return JsonResponse({"success": True})
 
     else:

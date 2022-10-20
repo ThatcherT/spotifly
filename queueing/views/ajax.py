@@ -3,6 +3,7 @@ from queueing.models import Listener
 from queueing.utils.songs import get_suggested_songs, get_song_matches
 import json
 
+
 def search(request):
     """
     Search for a song

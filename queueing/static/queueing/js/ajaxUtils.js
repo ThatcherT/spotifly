@@ -28,7 +28,7 @@ function queueManagement() {
     dataType: "json",
     success: function (data) {
       // update jQuery data
-      jQuery.data(document.body, "queueMgmt", data.q_mgmt); 
+      $("body").data("queueMgmt", data.q_mgmt);
       return true;
     },
     error: function (xhr, status, error) {
@@ -91,7 +91,7 @@ function queue(songObj) {
   });
 }
 
-function session(stop=false) {
+function session(stop = "") {
   $.ajax({
     url: "/ajax/session/",
     type: "POST",
@@ -103,7 +103,6 @@ function session(stop=false) {
     dataType: "json",
   });
 }
-
 
 // send ajax to server and shuffle for IAmDJ
 function shuffle() {
@@ -149,7 +148,7 @@ function followDJ() {
     dataType: "json",
     success: function (data) {
       // update jQuery data
-      jQuery.data(document.body, "followingDJ", followingDJ);
+      $("body").data("followingDJ", followingDJ);
       // weird bug that causes invisible bottom bar..
       const bottomBar = document.getElementById("bottom-bar");
       bottomBar.style.display = "";
@@ -179,7 +178,7 @@ function unfollowDJ() {
     dataType: "json",
     success: function (data) {
       // update jQuery data
-      jQuery.data(document.body, "followingDJ", null);
+      $("body").data("followingDJ", null);
       loadDJPage();
       return true;
     },

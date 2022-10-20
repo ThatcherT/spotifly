@@ -3,11 +3,11 @@ This document contains some helpful utils for shuffling, following, and queueing
 */
 
 function getFollowingDJ() {
-  return jQuery.data(document.body, "followingDJ");
+  return $("body").data("followingDJ");
 }
 
 function getIAmDJ() {
-  return jQuery.data(document.body, "IAmDJ");
+  return $("body").data("IAmDJ");
 }
 
 // STARTUP SCRIPT RUNS EVERY TIME!!!!!
@@ -30,7 +30,7 @@ function loadPage() {
 
 // clear out local storage and reload page
 function logOut() {
-  jQuery.data(document.body, "IAmDJ", "");
+  $("body").data("IAmDJ", "");
   loadPage();
 }
 

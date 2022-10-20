@@ -76,12 +76,16 @@ def shuffle(request):
     return JsonResponse({"success": True})
 
 
-def start_session(request):
+def session(request):
     """
     Start a session for a dj
     """
     IAmDJ = request.POST.get("IAmDJ")
+    stopSession = request.POST.get("stop")
     listener = Listener.objects.get(name=IAmDJ)
+    if stopSession:
+        listener.stop_session()
+        return JsonResponse({"success": True})
     listener.start_session()
     return JsonResponse({"success": True})
 

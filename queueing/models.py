@@ -80,6 +80,7 @@ class Listener(models.Model):
                 scheduler.cancel(j)
         # delete existing redis queue
         cache.delete(self.name)
+        
         scheduler.schedule(
             scheduled_time=datetime.now(),
             func=self.decide_to_queue,
@@ -87,6 +88,13 @@ class Listener(models.Model):
             repeat=180,  # 3 hours
             id=self.name,
         )
+    def stop_session(self):
+        """Stop a session"""
+        for j in scheduler.get_jobs():
+            if j.id == self.name:
+                scheduler.cancel(j)
+                return True
+        return False
 
     def decide_to_queue(self):
         playback = self.playback  # static copy
@@ -177,7 +185,7 @@ class Listener(models.Model):
                     # TODO: this is oviously a consequence of a poorly architected class structure
                     queue_mgmt = json.loads(cache.get(value["listener_to"]))
                     if queue_mgmt["on_deck"] == "":
-                        queue_mgmt["on_deck"] = uri
+                        queue_mgmt["on_deck"] = {uri: value}
                         # queue the song
                         listener = Listener.objects.get(name=value["listener_to"])
                         listener.queue_song(uri)

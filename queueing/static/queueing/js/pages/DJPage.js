@@ -20,14 +20,20 @@ async function getDJs() {
 // return the HTML for the list of queued songs
 function getQueueHTML() {
   let rowsHTML = "";
-  // TODO: get queue from redis
   // use jquery to get "queueMgmt" from document.body
-
   let queueMgmt = jQuery.data(document.body, "queueMgmt");
   if (queueMgmt) {
-    queueMgmt.queue.forEach((songObj) => {
-      rowsHTML += getSongRowHTML(songObj).outerHTML;
-    });
+    // queueMgmt.on_deck TODO
+    // queueMgmt.queue is a dictionary where each key is a song's unique URI
+    // it has a value of a dict with a key song_object
+    // the value of the key song_object should be passed to getSongRowHTML
+    for (let songURI in queueMgmt.queue) {
+      let song = queueMgmt.queue[songURI].song_object;
+      // TODO: this is pretty jank, no?
+      rowsHTML += getSongRowHTML(song).outerHTML;
+    }
+
+    
   } else {
     rowsHTML = `<div class="row">
             <div class="col-12">

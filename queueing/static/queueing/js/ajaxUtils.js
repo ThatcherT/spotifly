@@ -91,17 +91,19 @@ function queue(songObj) {
   });
 }
 
-function startSession() {
+function session(stop=false) {
   $.ajax({
-    url: "/ajax/start-session/",
+    url: "/ajax/session/",
     type: "POST",
     data: {
       csrfmiddlewaretoken: window.CSRF_TOKEN,
       IAmDJ: getIAmDJ(),
+      stop: stop,
     },
     dataType: "json",
   });
 }
+
 
 // send ajax to server and shuffle for IAmDJ
 function shuffle() {

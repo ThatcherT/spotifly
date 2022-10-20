@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from queueing.models import Listener
 from queueing.utils.songs import get_suggested_songs, get_song_matches
-
+import json
 
 def search(request):
     """
@@ -92,7 +92,7 @@ def queue_mgmt(request):
     """
     dj = request.POST.get("dj")
     listener = Listener.objects.get(name=dj)
-    return JsonResponse({"q_mgmt": listener.q_mgmt})
+    return JsonResponse({"q_mgmt": listener.q_mgmt.queue_mgmt})
 
 
 def queue(request):

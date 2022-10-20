@@ -19,16 +19,16 @@ function search() {
 
 function queueManagement() {
   $.ajax({
-    url: "/ajax/queue-management/",
+    url: "/ajax/queue-mgmt/",
     type: "POST",
     data: {
       csrfmiddlewaretoken: window.CSRF_TOKEN,
-      IAmDJ: getIAmDJ(),
+      dj: getFollowingDJ(),
     },
     dataType: "json",
     success: function (data) {
       // update jQuery data
-      jQuery.data(document.body, "queueMgmt", data); 
+      jQuery.data(document.body, "queueMgmt", data.q_mgmt); 
       return true;
     },
     error: function (xhr, status, error) {
@@ -76,13 +76,13 @@ function getNowPlaying() {
 
 // send an ajax request with local storage data and data from an input element
 // this request should return a msg indicating queue success or failure
-function queue(URI) {
+function queue(songObj) {
   return $.ajax({
     url: "/ajax/queue/",
     type: "POST",
     data: {
       csrfmiddlewaretoken: window.CSRF_TOKEN,
-      uri: URI,
+      songObj: songObj,
       dj: getFollowingDJ(),
     },
     success: function (data) {

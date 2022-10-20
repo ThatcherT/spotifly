@@ -20,24 +20,47 @@ async function getDJs() {
 // return the HTML for the list of queued songs
 function getQueueHTML() {
   let rowsHTML = "";
-  // use jquery to get "queueMgmt" from document.body
-  let queueMgmt = jQuery.data(document.body, "queueMgmt");
-  if (queueMgmt) {
-    // queueMgmt.on_deck TODO
-    // queueMgmt.queue is a dictionary where each key is a song's unique URI
-    // it has a value of a dict with a key song_object
-    // the value of the key song_object should be passed to getSongRowHTML
-    for (let songURI in queueMgmt.queue) {
-      let song = queueMgmt.queue[songURI].song_object;
-      // TODO: this is pretty jank, no?
-      rowsHTML += getSongRowHTML(song).outerHTML;
+  // use jquery to get "queueMgmt"
+  let queueMgmt = $("body").data("queueMgmt");
+  console.log('session data', queueMgmt);
+  if (Object.keys(queueMgmt.on_deck).length > 0) {
+    rowsHTML += `<div class="row">
+        <div class="col">
+            On Deck
+        </div>
+    </div>`;
+    // queueMgmt.on_deck is a dictionary where the key is a song's unique URI
+    // and the value is the song object
+    for (let songURI in queueMgmt.on_deck) {
+      let songObj = queueMgmt.on_deck[songURI].song_object;
+      rowsHTML += getSongRowHTML(songObj).outerHTML;
     }
 
-    
-  } else {
-    rowsHTML = `<div class="row">
+    if (Object.keys(queueMgmt.queue).length > 0) {
+      rowsHTML += `<div class="row">
+        <div class="col">
+            Queue
+        </div>
+    </div>`;
+      // queueMgmt.queue is a dictionary where each key is a song's unique URI
+      // it has a value of a dict with a key song_object
+      // the value of the key song_object should be passed to getSongRowHTML
+      for (let songURI in queueMgmt.queue) {
+        let song = queueMgmt.queue[songURI].song_object;
+        // TODO: this is pretty jank, no?
+        rowsHTML += getSongRowHTML(song).outerHTML;
+      }
+    } else {
+      rowsHTML += `<div class="row">
             <div class="col-12">
                 <h2>No songs in queue</h2>
+            </div>
+        </div>`;
+    }
+  } else {
+    rowsHTML += `<div class="row">
+            <div class="col">
+                <h2>For managed queue, DJ needs to start a Session</h2>
             </div>
         </div>`;
   }
@@ -91,11 +114,6 @@ async function loadDJPage() {
                     </div>
                 </div>
                 ${await getNowPlayingSongHTML()}
-                <div class="row">
-                    <div class="col">
-                        Queue
-                    </div>
-                </div>
                 ${getQueueHTML()}
               `;
   } else {

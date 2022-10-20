@@ -44,7 +44,7 @@ function showSongsOnQueuePage(songObjs) {
   searchResults.innerHTML = "";
   // add rows to div
   // only use the first 5 results
-  songObjs.slice(0, 5).forEach(function (songObj) {
+  songObjs.forEach(function (songObj) {
     const row = getSongRowHTML(songObj);
     // append this row to the div
     searchResults.appendChild(row);

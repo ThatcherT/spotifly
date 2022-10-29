@@ -116,11 +116,6 @@ def vote_song(request):
     dj = request.POST.get("dj")
     listener = Listener.objects.get(name=dj)
     listener.q_mgmt.queue_vote(request.POST.get("songUri"))
-    for key, value in listener.q_mgmt.queue_mgmt.items():
-        if key == "queue":
-            for key, value in value.items():
-                print(value["votes"])
-
     return JsonResponse({"q_mgmt": listener.q_mgmt.queue_mgmt})
 
 

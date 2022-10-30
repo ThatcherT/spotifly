@@ -11,7 +11,7 @@ function getIAmDJ() {
 }
 
 function getAnon() {
-  return $("body").data("Anyonymous");
+  return $("body").data("anonymous");
 }
 
 // STARTUP SCRIPT RUNS EVERY TIME!!!!!

@@ -80,7 +80,7 @@ function getNowPlaying() {
     type: "POST",
     data: {
       csrfmiddlewaretoken: window.CSRF_TOKEN,
-      dj: getFollowingDJ(),
+      followingDj: getFollowingDJ(),
     },
     success: function (data) {
       return data.songObj;

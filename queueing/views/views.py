@@ -76,12 +76,14 @@ def sp_redirect(request):
 
     # get spotify username with token
     sp = spotipy.Spotify(auth=token)
+    not_in_dashboard = False
     try:
         user = sp.current_user()
         username = user["id"]
     except:
         # generate a username using queueing/random_names/adjectives.txt and queueing/random_names/animals.txt
         # get the adjectives
+        not_in_dashboard = True
         with open("queueing/random_names/adjectives.txt", "r") as f:
             adjectives = f.read().splitlines()
         # get the animals
@@ -97,7 +99,7 @@ def sp_redirect(request):
         animal = random.choice(animals_)
         # create a username
         username = adjective + " " + animal
-        request.session["Anonymous"] = True
+        request.session["anonymous"] = True
         print("user not in dashboard!")
 
     # create a listener object with token
@@ -113,7 +115,8 @@ def sp_redirect(request):
         send_mail(
             subject, html_message, from_email, [to_email], html_message=html_message
         )
-
+    if not_in_dashboard:
+        listener.anon = True
     listener.token = token
     listener.refresh_token = token_info["refresh_token"]
     listener.expires_at = token_info["expires_at"]

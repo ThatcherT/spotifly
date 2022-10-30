@@ -116,7 +116,7 @@
       "followingDJ",
       "{{ request.session.followingDJ|default:'' }}"
     );
-    $("body").data("Anonymous", "{{ request.session.Anonymous|default:'' }}");
+    $("body").data("anonymous", "{{ request.session.anonymous|default:'' }}");
   </script>
 
   <script src="{% static 'queueing/js/pages/welcome.js' %}"></script>

@@ -11,7 +11,7 @@ async function getDJs() {
       return data;
     },
     error: function (xhr, status, error) {
-      console.log(status, error);
+      console.log("getDJs", status, error);
     },
   });
 }

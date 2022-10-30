@@ -13,8 +13,8 @@ def search(request):
     Search for a song
     """
     # get dj from session
-    dj = request.session.get("followingDJ")
-    listener = Listener.objects.get(name=dj)
+    following_dj = request.session.get("followingDJ")
+    listener = Listener.objects.get(name=following_dj)
     # get search term
     song = request.POST.get("song")
     # get spotify client
@@ -43,7 +43,10 @@ def now_playing(request):
     """
     Return Spotify Song Obj for song that is playing
     """
-    listener = Listener.objects.get(name=request.POST["dj"])
+    print("getting dj")
+    following_dj = request.session.get("followingDJ")
+    print("getting listener", following_dj)
+    listener = Listener.objects.get(name=following_dj)
     sp = listener.sp_client.sp
     if not sp:
         return JsonResponse({"success": False, "error": "no spotify client"})
@@ -143,6 +146,7 @@ def queue(request):
         return JsonResponse({"success": True})
 
 
+@csrf_exempt
 def playlists(request):
     """
     Get the playlists for the user
@@ -161,8 +165,6 @@ def get_djs(request):
     """
     get the listener objects from the database
     """
-    djs = Listener.objects.all()
-    djs_list = []
-    for dj in djs:
-        djs_list.append(dj.name)
+    djs = Listener.objects.all().filter(anon=False)
+    djs_list = [dj.name for dj in djs]
     return JsonResponse({"djs": djs_list})

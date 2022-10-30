@@ -10,7 +10,7 @@ function getIAmDJ() {
   return $("body").data("IAmDJ");
 }
 
-function getAnopn() {
+function getAnon() {
   return $("body").data("Anyonymous");
 }
 

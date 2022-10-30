@@ -11,7 +11,6 @@ async function getDJs() {
       return data;
     },
     error: function (xhr, status, error) {
-      alert(xhr.responseText);
       console.log(status, error);
     },
   });
@@ -101,6 +100,11 @@ async function loadDJPage() {
                           You are following ${getFollowingDJ()}
                       </p>
                   </div>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                    <p id="follow-dj-error" class="error-message"></p>
+                </div>
               </div>
               <div class="row">
                     <div class="col-12">

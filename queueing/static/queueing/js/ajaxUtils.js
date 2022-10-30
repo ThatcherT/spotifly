@@ -86,11 +86,8 @@ function getNowPlaying() {
       return data.songObj;
     },
     error: function (xhr, status, error) {
-      alert(xhr.responseText);
       console.log(status, error);
-      document.getElementById("follow-dj-error").innerHTML =
-        "IDK what happened";
-      return false;
+      return {};
     },
   });
 }
@@ -195,7 +192,6 @@ function followDJ() {
       return true;
     },
     error: function (xhr, status, error) {
-      alert(xhr.responseText);
       console.log(status, error);
       document.getElementById("follow-dj-error").innerHTML =
         "IDK what happened";
@@ -221,7 +217,6 @@ function unfollowDJ() {
       return true;
     },
     error: function (xhr, status, error) {
-      alert(xhr.responseText);
       console.log(status, error);
       document.getElementById("follow-dj-error").innerHTML =
         "IDK what happened";

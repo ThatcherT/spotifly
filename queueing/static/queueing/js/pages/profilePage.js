@@ -43,7 +43,7 @@ function loadProfilePage() {
                   </div>
               </div>`;
     getPlaylists();
-    getAnonUser();
+    getAnon();
   } else {
     $.ajax({
       url: "/spotify/connect-link/",
@@ -68,9 +68,6 @@ function loadProfilePage() {
                       </a>
                   </div>
               </div>`;
-      },
-      error: function (xhr, status, error) {
-        alert(xhr.responseText);
       },
     });
   }

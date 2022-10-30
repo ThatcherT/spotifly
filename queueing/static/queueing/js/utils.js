@@ -10,6 +10,10 @@ function getIAmDJ() {
   return $("body").data("IAmDJ");
 }
 
+function getAnopn() {
+  return $("body").data("Anyonymous");
+}
+
 // STARTUP SCRIPT RUNS EVERY TIME!!!!!
 loadPage();
 

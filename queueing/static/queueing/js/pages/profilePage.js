@@ -16,6 +16,8 @@ function loadProfilePage() {
                       <p>
                           You are DJ ${getIAmDJ()}
                       </p>
+                      <div id="anon-user></div>
+
                       <button class="btn btn-primary big-ole-btn" onclick="shuffle()">Shuffle</button>
                       <button class="btn btn-primary big-ole-btn" onclick="session()">Start Session</button>
                       <button class="btn btn-primary big-ole-btn" onclick="session(true)">Stop Session</button>
@@ -41,6 +43,7 @@ function loadProfilePage() {
                   </div>
               </div>`;
     getPlaylists();
+    getAnonUser();
   } else {
     $.ajax({
       url: "/spotify/connect-link/",

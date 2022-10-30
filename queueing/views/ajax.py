@@ -107,7 +107,10 @@ def queue_mgmt(request):
     Return the queue management object
     """
     dj = request.POST.get("dj")
-    listener = Listener.objects.get(name=dj)
+    try:
+        listener = Listener.objects.get(name=dj)
+    except Listener.DoesNotExist:
+        return JsonResponse({"q_mgmt": {}})
     return JsonResponse({"q_mgmt": listener.q_mgmt.queue_mgmt})
 
 

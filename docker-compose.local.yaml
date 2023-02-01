@@ -64,3 +64,9 @@ services:
       - DOCKER_LOCAL=True
     depends_on:
       - "redis"
+  frontend:
+    restart: always
+    build: ./frontend
+    command: npm start
+    ports:
+      - "3000:3000"

@@ -17,18 +17,21 @@ function getAnon() {
 // STARTUP SCRIPT RUNS EVERY TIME!!!!!
 loadPage();
 
+// Changed this to replace the "Get Started/Welcome Flow" to default to the profiles page. 
+// To clarify the logic here:
+// If the user has not logged in, prompt them to the profile page which will default show a login button, explainer, and prompts to page.
+// If the user has logged in (is a DJ), prompt them to their profile
+// If the user has not logged in, but is following a DJ, prompt them to the DJ's profile
 function loadPage() {
   // check if any DJ relations exist
   if (getFollowingDJ() || getIAmDJ()) {
-    const bottomBar = document.getElementById("bottom-bar");
-    bottomBar.style.display = "";
     if (getIAmDJ()) {
       loadProfilePage();
     } else {
       loadDJPage();
     }
   } else {
-    loadWelcomePage();
+    loadProfilePage();
   }
 }
 

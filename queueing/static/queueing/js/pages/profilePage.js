@@ -59,20 +59,13 @@ function loadProfilePage() {
       },
       success: function (data) {
         mainContent.innerHTML = `
-              <div class="row">
-                  <div class="col-12">
-                      <h1>Connect with spotify to become a DJ</h1>
-                  </div>
-              </div>
-              <div class="row">
-                  <div class="col-12">
-                      <a href="${data.url}">
-                        <button id="connect-with-spotify" class="btn btn-primary btn-lg big-ole-btn" style="background-color: green;">
-                            Connect with Spotify
-                        </button>
-                      </a>
-                  </div>
-              </div>`;
+            <div class="connect-flow-wrapper">
+                <a href="${data.url}">
+                    <button id="connect-with-spotify" class="connect-button">
+                        Connect with Spotify
+                    </button>
+                </a>
+            </div>`;
       },
     });
   }

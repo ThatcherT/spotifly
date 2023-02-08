@@ -25,57 +25,50 @@
       rel="stylesheet"
       type="text/css"
     />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap");
+    </style>
   </head>
 
   <body>
-    <div class="container-fluid" id="container-fluid">
-      <!-- BEGIN NAVBAR -->
-      <nav class="navbar navbar-expand navbar-dark bg-dark">
-        <img
-          src="{% static 'queueing/img/musicutils.png' %}"
-          height="264px"
-          width="128px"
-          alt="logo"
-          class="navbar-logo-horse"
-        />
-        <a class="navbar-brand mx-auto navbar-title" href="#"> QSongs </a>
-      </nav>
-      <!-- END NAVBAR -->
-      <div id="main-content" class="main-content"></div>
-      <div id="get-started" style="display: none">
-        <p class="get-started" style="font-size: 4rem; padding-left: 5%">
-          Get Started <span>&#8594;</span>
-        </p>
+    <div class="page-container">
+      <div class="container-fluid" id="container-fluid">
+        <!-- END NAVBAR -->
+        <div id="main-content" class="main-content"></div>
+        <div id="get-started" style="display: none">
+          <p class="get-started" style="font-size: 4rem; padding-left: 5%">
+            Get Started <span>&#8594;</span>
+          </p>
+        </div>
       </div>
-      <nav
-        class="navbar fixed-bottom navbar-expand bottom-bar"
-        id="bottom-bar"
-        style="display: none"
-      >
-        <ul class="navbar-nav nav-fill w-100">
-          <li class="nav-item">
+      <nav class="navbar fixed-bottom navbar-expand bottom-bar" id="bottom-bar">
+        <div class="icon-bar">
+          <div class="icon-wrapper">
             <a class="nav-link" href="#">
               <img
                 class="nav-icon"
                 id="profile-icon"
-                src="{% static 'queueing/img/icons/profile.svg' %}"
+                src="{% static 'queueing/img/profile.png' %}"
                 alt="profile"
                 onClick="loadProfilePage()"
+                height="30px"
               />
             </a>
-          </li>
-          <li class="nav-item">
+            <div class="icon-txt">Profile</div>
+          </div>
+          <div class="icon-wrapper">
             <a class="nav-link" href="#">
               <img
                 class="nav-icon"
                 id="queue-icon"
-                src="{% static 'queueing/img/icons/record.svg' %}"
+                src="{% static 'queueing/img/queue.png' %}"
                 alt="queue"
                 onClick="loadQueuePage()"
               />
             </a>
-          </li>
-          <li class="nav-item">
+            <div class="icon-txt">Queue</div>
+          </div>
+          <div class="icon-wrapper">
             <a class="nav-link" href="#">
               <img
                 class="nav-icon"
@@ -85,8 +78,9 @@
                 onClick="loadDJPage()"
               />
             </a>
-          </li>
-        </ul>
+            <div class="icon-txt">Follow</div>
+          </div>
+        </div>
       </nav>
     </div>
   </body>
